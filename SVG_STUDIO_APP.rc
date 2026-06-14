@@ -1,0 +1,34 @@
+#include <windows.h>
+
+IDI_ICON1 ICON "SVG_STUDIO_ICON.ico"
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+ FILEFLAGS 0x0L
+ FILEOS VOS__WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "Robin Gupta Studio (RGSTM)"
+            VALUE "FileDescription", "SVG Studio - Professional SVG Viewer, Editor and Manager"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "SVG Studio"
+            VALUE "OriginalFilename", "SVG Studio.exe"
+            VALUE "ProductName", "SVG Studio"
+            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "LegalCopyright", "Robin Gupta Studio"
+            VALUE "Comments", "Created to solve SVG workflow problems on Windows. SVG files often open in browsers or code editors instead of a dedicated SVG workspace. SVG Studio provides a focused environment to open, manage, preview and work with SVG files."
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
