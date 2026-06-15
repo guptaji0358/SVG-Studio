@@ -653,6 +653,21 @@ public:
                                                                                                                                                 }
                                                                                                 );
                                                                             }
+    // Tab + (1 - 9) shortcut
+    static void createTabNumberShortcut(QWidget *window,QTabWidget *tabWidget) {
+                                                                                    for (int i = 0; i <= 9; i++) {
+                                                                                                                        QShortcut *tabSwiitchShortcut;
+                                                                                                                        tabSwiitchShortcut = new QShortcut(QKeySequence(QString("Ctrl + %1").arg(i)),window);
+                                                                                                                        QObject::connect(tabSwiitchShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                                                    if (tabWidget->count() >= i) {
+                                                                                                                                                                                                                                        tabWidget->setCurrentIndex(i - 1);
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                    
+                                                                                                                                                                                                }
+                                                                                                                                        );
+                                                                                                                    }
+                                                                                    
+                                                                                }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -966,18 +981,8 @@ public:
                                                                                                 }
                                         );
 
-                                // ctrl + 1 - 9 shortcut Creation
-                                for (int i = 1; i <= 9; i++) {
-                                                                QShortcut *shortCut;
-                                                                shortCut = new QShortcut(QKeySequence(QString("Ctrl + %1").arg(i)),this);
-                                                                connect(shortCut,&QShortcut::activated,this,[=]() {
-                                                                                                                        if (tabWidget->count() >= i) {
-                                                                                                                                                        tabWidget->setCurrentIndex(i - 1);
-                                                                                                                                                    }
-                                                                                                                        
-                                                                                                                    }
-                                                                        );
-                                                            }
+                                // ctrl + 1 - 9 shortcut Call
+                                SVGStudioShortcuts::createTabNumberShortcut(this,tabWidget);
                             
                                 // Ctrl + W shortvut Creation
                                 QShortcut *closeTabShortCut;
