@@ -627,7 +627,7 @@ public:
 class SVGStudioShortcuts {
 public:
 
-    // Ctrl + O Shortcut
+    // Ctrl + O Shortcut Creation
     static void openFilesShortcut(QAction *openAction,QWidget *window,SVGStudioLogic *logic,QTabWidget *tabWidget) {
                                                                                                                             QObject::connect(openAction,&QAction::triggered,window,[=]() {
                                                                                                                                                                                             QStringList filePaths;
@@ -645,7 +645,7 @@ public:
                                                                                                                                                                                         }
                                                                                                                                             );
                                                                                                                         }
-    // Ctrl + Q Shortcut
+    // Ctrl + Q Shortcut Creation
     static void exitApplicationShortcut(QAction *exitAction,QWidget *window) {
                                                                                 QObject::connect(
                                                                                                     exitAction,&QAction::triggered,window,[=]() {
@@ -653,7 +653,7 @@ public:
                                                                                                                                                 }
                                                                                                 );
                                                                             }
-    // Tab + (1 - 9) shortcut
+    // Tab + (1 - 9) shortcut Creation
     static void createTabNumberShortcut(QWidget *window,QTabWidget *tabWidget) {
                                                                                     for (int i = 0; i <= 9; i++) {
                                                                                                                         QShortcut *tabSwiitchShortcut;
@@ -668,6 +668,26 @@ public:
                                                                                                                     }
                                                                                     
                                                                                 }
+    // Ctrl + W Shortcut Creation
+    static void closeCurrentTabShortcut(QWidget *window,QTabWidget *tabWidget,QStack<QString> *closedTabs) {
+                                                                                                                QShortcut *closeCurrentTabShortcut;
+                                                                                                                closeCurrentTabShortcut = new QShortcut(QKeySequence("Ctrl + W"),window);
+                                                                                                                QObject::connect(closeCurrentTabShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                                                int Index;
+                                                                                                                                                                                                Index = tabWidget->currentIndex();
+                                                                                                                                                                                                if (Index != -1) {
+                                                                                                                                                                                                                    if (!tabWidget->tabToolTip(Index).isEmpty()) {
+                                                                                                                                                                                                                                                            closedTabs->push(tabWidget->tabToolTip(Index));
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        QWidget *tab;
+                                                                                                                                                                                                                        tab = tabWidget->widget(Index);
+                                                                                                                                                                                                                        tabWidget->removeTab(Index);
+                                                                                                                                                                                                                        delete tab;
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                
+                                                                                                                                                                                            }
+                                                                                                                                );
+                                                                                                            }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -984,23 +1004,8 @@ public:
                                 // ctrl + 1 - 9 shortcut Call
                                 SVGStudioShortcuts::createTabNumberShortcut(this,tabWidget);
                             
-                                // Ctrl + W shortvut Creation
-                                QShortcut *closeTabShortCut;
-                                closeTabShortCut = new QShortcut(QKeySequence("Ctrl + W"),this);
-                                connect(closeTabShortCut,&QShortcut::activated,this,[=]() {
-                                                                                                int index;
-                                                                                                index = tabWidget->currentIndex();
-                                                                                                if(index != -1) {
-                                                                                                                    if (!tabWidget->tabToolTip(index).isEmpty()) {
-                                                                                                                                                                    closedTabs.push(tabWidget->tabToolTip(index));
-                                                                                                                                                                }
-                                                                                                                    QWidget *tab;
-                                                                                                                    tab = tabWidget->widget(index);
-                                                                                                                    tabWidget->removeTab(index);
-                                                                                                                    delete tab;
-                                                                                                                }
-                                                                                            }
-                                        );
+                                // call - Ctrl + W shortvut
+                                SVGStudioShortcuts::closeCurrentTabShortcut(this,tabWidget,&closedTabs);
 
                                 // Ctrl + Tab shortcut Creation
                                 QShortcut *nextTabShortCut;
