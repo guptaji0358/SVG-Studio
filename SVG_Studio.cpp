@@ -703,7 +703,7 @@ public:
                                                                                                                                                 }
                                                                                             );
                                                                         }
-    // Creation - Ctrl + Shift + Tab
+    // Creation - Ctrl + Shift + Tab Shortcut
     static void previousTabShortcut(QWidget *window,QTabWidget *tabWidget) {
                                                                                 QShortcut *previousTabShortcut;
                                                                                 previousTabShortcut = new QShortcut(QKeySequence("Ctrl + Shift + Tab"),window);
@@ -716,6 +716,25 @@ public:
                                                                                                                                                         }
                                                                                                 );
                                                                             }
+
+   // Creation - Ctrl + Shift + T Shortcut
+   static void restoreClosedTabShortcut(QWidget *window,QTabWidget *tabWidget,QStack<QString> *closedTabs) {
+                                                                                                            QShortcut *restoreShortcut;
+                                                                                                            restoreShortcut = new QShortcut(QKeySequence("Ctrl + Shift + T"),window);
+                                                                                                            QObject::connect(restoreShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                                    if (!closedTabs->isEmpty()) {
+                                                                                                                                                                                                                    QString filePath;
+                                                                                                                                                                                                                    filePath = closedTabs->pop();
+                                                                                                                                                                                                                    SVGStudioEditorTab *editorTab;
+                                                                                                                                                                                                                    editorTab = new SVGStudioEditorTab;
+                                                                                                                                                                                                                    editorTab->getPreview()->load(filePath);
+                                                                                                                                                                                                                    tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
+                                                                                                                                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
+                                                                                                                                                                                                                    tabWidget->setCurrentWidget(editorTab);
+                                                                                                                                                                                                                }
+                                                                                                                                                                                    }
+                                                                                                                            );
+                                                                                                        }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1042,21 +1061,7 @@ public:
                                 SVGStudioShortcuts::previousTabShortcut(this,tabWidget);
 
                                 // Ctrl + Shift + T Shortcut Creation
-                                QShortcut *restoreTabShortCut;
-                                restoreTabShortCut = new QShortcut(QKeySequence("Ctrl + Shift + T"),this);
-                                connect(restoreTabShortCut, &QShortcut::activated,this,[=]() {
-                                                                                                    if (!closedTabs.isEmpty()) {
-                                                                                                                                    QString filePath;
-                                                                                                                                    filePath = closedTabs.pop();
-                                                                                                                                    SVGStudioEditorTab *editorTab;
-                                                                                                                                    editorTab = new SVGStudioEditorTab;
-                                                                                                                                    editorTab->getPreview()->load(filePath);
-                                                                                                                                    tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
-                                                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
-                                                                                                                                    tabWidget->setCurrentWidget(editorTab);
-                                                                                                                                }
-                                                                                                }
-                                        );
+                                SVGStudioShortcuts::restoreClosedTabShortcut(this,tabWidget,&closedTabs);
 
                                 // Ctrl + Shift + N shortcut creation
                                 QShortcut *openNewWelcomeTabShortCut;
