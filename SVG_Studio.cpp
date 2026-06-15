@@ -623,71 +623,151 @@ public:
                             exec();
                         }
 };
+class SVGStudioWelcomePage : public QWidget {
+private:
+    QPushButton *newFileButton;
+    QPushButton *openFileButton;
+    QPushButton *openFolderButton;
+    QPushButton *convertToSvgButton;
 
-class SVGStudioWelcomePage {
+    QLabel *welcomeToTheSvgStudioLabel;
+    QLabel *welcomePageStartLabel;
+    SVGStudioButtonLogic *buttonLogic;
+    QTabWidget *tabWidget;
+    QFrame *dragOverlay;
+    QLabel *dragOverlayLabel;
+
 public:
-    static QWidget* CreateWelcomePage(SVGStudioButtonLogic *buttonLogic,QWidget *parent,QTabWidget *tabWidget) {
-        QWidget *welcomePage;
-        welcomePage = new QWidget;
-        
-        QVBoxLayout *welcomeLayout;
-        welcomeLayout = new QVBoxLayout;
+    SVGStudioWelcomePage(SVGStudioButtonLogic *buttonLogic,QTabWidget *tabWidget,QWidget *parent = nullptr): QWidget(parent) {
+                                                                                                                                    this->buttonLogic = buttonLogic;
+                                                                                                                                    this->tabWidget = tabWidget;
 
-        QHBoxLayout *welcomeMainLayout;
-        welcomeMainLayout = new QHBoxLayout;
+                                                                                                                                    setAcceptDrops(true);
 
-        QVBoxLayout *leftLayout;
-        leftLayout = new QVBoxLayout;
+                                                                                                                                    CreateWidgets();
+                                                                                                                                    CreateLayouts();
+                                                                                                                                    CreateConnections();
+                                                                                                                                    CreateDragOverlay();
+                                                                                                                                }
 
-        QLabel *welcomeToTheSvgStudioLabel;
-        welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
-        welcomeToTheSvgStudioLabel->setStyleSheet(Style::welcomeToTheSvgStudioLabelStyle());
+private:
 
-        QLabel *welcomePageStartLabel;
-        welcomePageStartLabel =new QLabel("Open, Preview and Manage SVG Files");
-        welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
+    void CreateWidgets() {
+                            welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
+                            welcomeToTheSvgStudioLabel->setStyleSheet(Style::welcomeToTheSvgStudioLabelStyle());
 
-        QPushButton *newFileButton;
-        newFileButton = new QPushButton("New File...");
+                            welcomePageStartLabel =new QLabel("Open, Preview and Manage SVG Files");
+                            welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
 
-        newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
-        newFileButton->setIconSize(QSize(32,32));
-        newFileButton->setStyleSheet(Style::welcomeButtonStyle());
+                            newFileButton = new QPushButton("New File...");
+                            newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
+                            newFileButton->setIconSize(QSize(32,32));
+                            newFileButton->setStyleSheet(Style::welcomeButtonStyle());
 
-        QPushButton *openFileButton;
-        openFileButton = new QPushButton("Open File...");
-        openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
-        openFileButton->setIconSize(QSize(32,32));
-        openFileButton->setStyleSheet(Style::welcomeButtonStyle());
-        QObject::connect(openFileButton,QPushButton::clicked,parent,[=]() {buttonLogic->openFileButtonLogic(parent,tabWidget);});
+                            openFileButton = new QPushButton("Open File...");
+                            openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
+                            openFileButton->setIconSize(QSize(32,32));
+                            openFileButton->setStyleSheet(Style::welcomeButtonStyle());
+                            QObject::connect(openFileButton,&QPushButton::clicked,this,[=](){buttonLogic->openFileButtonLogic(this,tabWidget);});
 
-        QPushButton *openFolderButton;
-        openFolderButton =new QPushButton("Open Folder...");
-        openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
-        openFolderButton->setIconSize(QSize(32,32));
-        openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
-        QObject::connect(openFolderButton,&QPushButton::clicked,parent,[=]() {buttonLogic->openFolderButtonLogic(parent,tabWidget);});
+                            openFolderButton =new QPushButton("Open Folder...");
+                            openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
+                            openFolderButton->setIconSize(QSize(32,32));
+                            openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
+                            QObject::connect(openFolderButton,&QPushButton::clicked,this,[=](){buttonLogic->openFolderButtonLogic(this,tabWidget);});
 
-        QPushButton *convertToSvgButton;
-        convertToSvgButton =new QPushButton("Convert to SVG...");
-        convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
-        convertToSvgButton->setIconSize(QSize(32,32));
-        convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
+                            convertToSvgButton =new QPushButton("Convert to SVG...");
+                            convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
+                            convertToSvgButton->setIconSize(QSize(32,32));
+                            convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
+                        }
 
-        leftLayout->addStretch();
-        leftLayout->addWidget(newFileButton);
-        leftLayout->addWidget(openFileButton);
-        leftLayout->addWidget(openFolderButton);
-        leftLayout->addWidget(convertToSvgButton);
+    void CreateLayouts() {
+                            QVBoxLayout *welcomeLayout;
+                            welcomeLayout = new QVBoxLayout;
 
-        welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
-        welcomeLayout->addWidget(welcomePageStartLabel);
-        welcomeMainLayout->addLayout(leftLayout,1);
-        welcomeMainLayout->addStretch();
-        welcomeLayout->addLayout(welcomeMainLayout);
-        welcomePage->setLayout(welcomeLayout);
-        return welcomePage;
+                            QHBoxLayout *welcomeMainLayout;
+                            welcomeMainLayout = new QHBoxLayout;
+
+                            QVBoxLayout *leftLayout;
+                            leftLayout = new QVBoxLayout;
+
+                            // QVBoxLayout *overlayLayout;
+                            // overlayLayout = new QVBoxLayout;
+                            // overlayLayout->addStretch();
+                            // overlayLayout->addWidget(dragOverlayLabel,0,Qt::AlignCenter);
+                            // overlayLayout->addStretch();
+                            // dragOverlay->setLayout(overlayLayout);
+
+                            leftLayout->addStretch();
+                            leftLayout->addWidget(newFileButton);
+                            leftLayout->addWidget(openFileButton);
+                            leftLayout->addWidget(openFolderButton);
+                            leftLayout->addWidget(convertToSvgButton);
+
+                            welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
+                            welcomeLayout->addWidget(welcomePageStartLabel);
+                            welcomeMainLayout->addLayout(leftLayout,1);
+                            welcomeMainLayout->addStretch();
+                            welcomeLayout->addLayout(welcomeMainLayout);
+                            setLayout(welcomeLayout);
+
+                        }
+
+    void CreateConnections() {
+        QObject::connect(openFileButton,&QPushButton::clicked,this,[=]() {
+                                                                            buttonLogic->openFileButtonLogic(this,tabWidget);
+                                                                        }
+                        );
     }
+
+    void CreateDragOverlay() {
+                                dragOverlay = new QFrame(this);
+                                dragOverlayLabel =new QLabel("Drop SVG Here",dragOverlay);
+                                dragOverlay->setStyleSheet(Style::dragOverlayStyle());
+                                dragOverlayLabel->setStyleSheet(Style::DropOverlayLabelStyle());
+
+                                QVBoxLayout *overlayLayout =new QVBoxLayout;
+
+                                overlayLayout->addStretch();
+                                overlayLayout->addWidget(dragOverlayLabel,0,Qt::AlignCenter);
+                                overlayLayout->addStretch();
+                                dragOverlay->setLayout(overlayLayout);
+                                dragOverlay->hide();
+                            }
+
+protected:
+
+    void dragEnterEvent(QDragEnterEvent *event) override {
+        if(event->mimeData()->hasUrls()) {
+                                            dragOverlay->show();
+                                            event->acceptProposedAction();
+                                        }
+    }
+
+    void dragLeaveEvent(QDragLeaveEvent *event) override {
+                                                            dragOverlay->hide();
+                                                            event->accept();
+                                                        }
+
+    void dropEvent(QDropEvent *event) override {
+                                                    dragOverlay->hide();
+                                                    QList<QUrl> urls = event->mimeData()->urls();
+
+                                                    for(QUrl url : urls) {
+                                                                            QString filePath = url.toLocalFile();
+                                                                            SVGStudioEditorTab *editorTab = new SVGStudioEditorTab;
+                                                                            editorTab->getPreview()->load(filePath);
+                                                                            tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
+                                                                            tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
+                                                                            tabWidget->setCurrentWidget(editorTab);
+                                                                        }
+                                                }
+
+    void resizeEvent(QResizeEvent *event) override {
+                                                        QWidget::resizeEvent(event);
+                                                        dragOverlay->setGeometry(rect());
+                                                    }
 };
 
 class SVGStudioShortcuts {
@@ -808,7 +888,7 @@ public:
                                                                                                                     newTabShortcut = new QShortcut(QKeySequence("Ctrl+Shift+N"),window);
                                                                                                                     QObject::connect(newTabShortcut,&QShortcut::activated,window,[=]() {
                                                                                                                                                                                             QWidget *welcomePage;
-                                                                                                                                                                                            welcomePage =SVGStudioWelcomePage::CreateWelcomePage(buttonLogic,window,tabWidget);
+                                                                                                                                                                                            welcomePage = new SVGStudioWelcomePage(buttonLogic,tabWidget,window);
                                                                                                                                                                                             tabWidget->addTab(welcomePage,"Welcome");
                                                                                                                                                                                             tabWidget->setCurrentWidget(welcomePage);
                                                                                                                                                                                         }
@@ -841,8 +921,6 @@ class SVGStudioGui : public QMainWindow {
                                             QStack<QString> closedTabs;
                                             QHBoxLayout *welcomeMainLayout;
                                             QVBoxLayout *leftLayout;
-                                            QFrame *dragOverlay;
-                                            QLabel *dragOverlayLabel;
 
 public:
     SVGStudioGui() {
@@ -866,71 +944,6 @@ public:
 
     void CreateCentralWidget() {
                                     centralWidget = new QWidget;
-
-                                    // Creating Welcome Tab
-                                    welcomePage = new QWidget;
-                                    welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
-                                    welcomeToTheSvgStudioLabel->setStyleSheet(Style::welcomeToTheSvgStudioLabelStyle());
-
-                                    // qLabel - Adding Welcome to the SVG Studio Label i welcome Tab
-                                    welcomePageStartLabel = new QLabel("Open, Preview and Manage SVG Files");
-                                    welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
-
-                                    // Button - Adding New file Button in Welcome Tab
-                                    newFileButton = new QPushButton("New File...");
-                                    newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
-                                    newFileButton->setIconSize(QSize(32,32));
-                                    newFileButton->setStyleSheet(Style::welcomeButtonStyle());
-                                    newFileButton->setCursor(Qt::PointingHandCursor);
-                                    newFileButton->setToolTip("Creae New SVG File");
-                                    newFileButton->setFixedWidth(140);
-                                    newFileButton->setFixedHeight(42);
-
-                                    // Button - Adding open file Button in Welcome Tab
-                                    openFileButton = new QPushButton("Open File...");
-                                    openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
-                                    openFileButton->setIconSize(QSize(32,32));
-                                    openFileButton->setStyleSheet(Style::welcomeButtonStyle());
-                                    openFileButton->setCursor(Qt::PointingHandCursor);
-                                    openFileButton->setToolTip("Open Fle...");
-                                    openFileButton->setFixedWidth(140);
-                                    openFileButton->setFixedHeight(42);
-                                    connect(openFileButton,&QPushButton::clicked,this,[=](){ buttonLogic.openFileButtonLogic(this,tabWidget);});
-
-                                    // Button - Adding open Foder Button in  welcome Tab
-                                    openFolderButton = new QPushButton("Open Folder...");
-                                    openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
-                                    openFolderButton->setIconSize(QSize(32,32));
-                                    openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
-                                    openFolderButton->setCursor(Qt::PointingHandCursor);
-                                    openFolderButton->setToolTip("Open Folder...");
-                                    openFolderButton->setFixedWidth(152);
-                                    openFolderButton->setFixedHeight(42);
-                                    connect(openFolderButton,&QPushButton::clicked,this,[=](){buttonLogic.openFolderButtonLogic(this,tabWidget);});
-
-                                    // Button - Adding Convert to SVG Button in  Welcome Tab
-                                    convertToSvgButton = new QPushButton("Convert to SVG...");
-                                    convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
-                                    convertToSvgButton->setIconSize(QSize(32,32));
-                                    convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
-                                    convertToSvgButton->setCursor(Qt::PointingHandCursor);
-                                    convertToSvgButton->setToolTip("Convert To SVG...");
-                                    convertToSvgButton->setFixedWidth(175);
-                                    convertToSvgButton->setFixedHeight(42);
-
-                                    // Animation of Drag and Drop - Adding Drag Drop in Welcome Tab
-                                    dragOverlay = new QFrame(centralWidget);
-                                    dragOverlayLabel = new QLabel("Drop SVG Here",dragOverlay);
-                                    dragOverlay->hide();
-                                    dragOverlay->setStyleSheet(Style::dragOverlayStyle());
-                                    dragOverlayLabel->setStyleSheet(Style::DropOverlayLabelStyle());
-
-                                    QVBoxLayout *overlayLayout;
-                                    overlayLayout = new QVBoxLayout;
-                                    overlayLayout->addStretch();
-                                    overlayLayout->addWidget(dragOverlayLabel,0,Qt::AlignCenter);
-                                    overlayLayout->addStretch();
-                                    dragOverlay->setLayout(overlayLayout);
 
                                     setCentralWidget(centralWidget);
                                 }
@@ -966,10 +979,10 @@ public:
                         }
 
     void CreateConnections() {
-                                // Oen SVG(s) in Tabs
+                                // Open SVG(s) in Tabs (Ctrl + O)
                                 SVGStudioShortcuts::openFilesShortcut(openAction,this,&logic,tabWidget);
 
-                                // connection - closing App
+                                // connection - closing App (Ctrl + Q)
                                 SVGStudioShortcuts::exitApplicationShortcut(exitAction,this);
 
                                 // Removing Tab 
@@ -1205,28 +1218,9 @@ public:
                         }
 
     void CreateWidgets() {
-                            QVBoxLayout *welcomeLayout;
-                            welcomeLayout = new QVBoxLayout;
-                            welcomeMainLayout = new QHBoxLayout;
-                            leftLayout = new QVBoxLayout;
-
-                            leftLayout->addStretch();
-                            leftLayout->addWidget(newFileButton);
-                            leftLayout->addWidget(openFileButton);
-                            leftLayout->addWidget(openFolderButton);
-                            leftLayout->addWidget(convertToSvgButton);
-
-                            welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
-                            welcomeLayout->addWidget(welcomePageStartLabel);
-
-                            welcomeMainLayout->addLayout(leftLayout,1);
-                            welcomeMainLayout->addStretch();
-
-                            welcomeLayout->addLayout(welcomeMainLayout);
-                            welcomePage->setLayout(welcomeLayout);
-
                             tabWidget = new QTabWidget;
-                            tabWidget->addTab(welcomePage,"Welcome");
+                            welcomePage = new SVGStudioWelcomePage(&buttonLogic,tabWidget,this);
+                            tabWidget->addTab(welcomePage,"Welcome");       
                             tabWidget->setMovable(true);
                             tabWidget->setTabsClosable(true);
                             tabBar = tabWidget->tabBar();
@@ -1236,7 +1230,6 @@ public:
 
     void CreateLayouts(QWidget *centralWidget) {
                                                     QVBoxLayout *layout = new QVBoxLayout;
-                                                    
                                                     layout->addWidget(tabWidget);
                                                     layout->setStretch(1, 1);
                                                     centralWidget->setLayout(layout);
@@ -1245,42 +1238,6 @@ public:
     void CreateStatusBar() {
                                 statusBar();
                             }
-
-protected:
-    // Create File Tabs while Drpping Files from File Expplorer or else 
-    void dragEnterEvent(QDragEnterEvent *event) override {
-                                                                if(event->mimeData()->hasUrls()) {
-                                                                                                    dragOverlay->show();
-                                                                                                    event->acceptProposedAction();
-                                                                                                }
-                                                            }
-
-    // Drop Files Using DraG & Drop from  file explorer
-    void dropEvent(QDropEvent *event) override {
-                                                    dragOverlay->hide();
-                                                    QList<QUrl> urls;
-                                                    urls = event->mimeData()->urls();
-                                                    for (QUrl url : urls) {
-                                                                                QString FilePath;
-                                                                                FilePath = url.toLocalFile();
-                                                                                SVGStudioEditorTab *editorTab;
-                                                                                editorTab = new SVGStudioEditorTab;
-                                                                                editorTab->getPreview()->load(FilePath);
-                                                                                tabWidget->addTab(editorTab,QFileInfo(FilePath).fileName());
-                                                                                tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),FilePath);
-                                                                                tabWidget->setCurrentWidget(editorTab);
-                                                                            }
-                                                }
-
-    void resizeEvent(QResizeEvent *event) override {
-                                                        QMainWindow::resizeEvent(event);
-                                                        dragOverlay->setGeometry(centralWidget->rect());
-                                                    }
-
-    void dragLeaveEvent(QDragLeaveEvent *event) override {
-                                                                dragOverlay->hide();
-                                                                event->accept();
-                                                            }
 };
 
 // Calls App
