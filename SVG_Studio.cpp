@@ -690,7 +690,7 @@ public:
                                                                                                             }
 
     // Creation - Ctrl + Tab Shortcut
-    static void NextTabShortcut(QWidget *window,QTabWidget *tabWidget) {
+    static void nextTabShortcut(QWidget *window,QTabWidget *tabWidget) {
                                                                             QShortcut *nextTabShortcut;
                                                                             nextTabShortcut = new QShortcut(QKeySequence("Ctrl + Tab"),window);
                                                                             QObject::connect(nextTabShortcut,&QShortcut::activated,window,[=]() {
@@ -1025,7 +1025,7 @@ public:
                                 SVGStudioShortcuts::closeCurrentTabShortcut(this,tabWidget,&closedTabs);
 
                                 // Call - Ctrl + Tab shortcut
-                                SVGStudioShortcuts::NextTabShortcut(this,tabWidget);
+                                SVGStudioShortcuts::nextTabShortcut(this,tabWidget);
 
                                 // Ctrl + Shift + Tab shortcut Creation
                                 QShortcut *previousTabShortCut;
