@@ -624,6 +624,29 @@ public:
                         }
 };
 
+class SVGStudioShortcuts {
+public:
+
+    // Ctrl + O Shortcut
+    static void openFilesShortcut(QAction *openAction,QWidget *window,SVGStudioLogic *logic,QTabWidget *tabWidget) {
+                                                                                                                            QObject::connect(openAction,&QAction::triggered,window,[=]() {
+                                                                                                                                                                                            QStringList filePaths;
+                                                                                                                                                                                            filePaths = logic->openSVG(window);
+
+                                                                                                                                                                                            for(QString filePath : filePaths) {
+                                                                                                                                                                                                                                    SVGStudioEditorTab *editorTab;
+                                                                                                                                                                                                                                    editorTab = new SVGStudioEditorTab;
+
+                                                                                                                                                                                                                                    editorTab->getPreview()->load(filePath);
+                                                                                                                                                                                                                                    tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
+                                                                                                                                                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
+                                                                                                                                                                                                                                    tabWidget->setCurrentWidget(editorTab);
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                        }
+                                                                                                                                            );
+                                                                                                                        }
+};
+
 class SVGStudioGui : public QMainWindow {
                                             SVGStudioLogic logic;
                                             SVGStudioMessages messages;
@@ -775,22 +798,7 @@ public:
 
     void CreateConnections() {
                                 // Oen SVG(s) in Tabs
-                                connect(openAction, &QAction::triggered, this, [=]() {
-                                                                                        QStringList filePaths;
-                                                                                        filePaths = logic.openSVG(this);
-
-                                                                                        for(QString filePath : filePaths) {
-                                                                                            if (!filePaths.isEmpty()) {
-                                                                                                SVGStudioEditorTab *editorTab;
-                                                                                                editorTab = new SVGStudioEditorTab;
-                                                                                                editorTab->getPreview()->load(filePath);
-                                                                                                tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
-                                                                                                tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
-                                                                                                tabWidget->setCurrentWidget(editorTab);
-                                                                                            }
-                                                                                        }
-                                                                                    }
-                                        );
+                                SVGStudioShortcuts::openFilesShortcut(openAction,this,&logic,tabWidget);
 
                                 // connection - closing App
                                 connect(exitAction, &QAction::triggered,this,[=]() {
@@ -822,7 +830,7 @@ public:
                                                                                                 }
                                         );
 
-                                // Creating Tab Right Clickk Options
+                                // Creating Tab Right Click Options
                                 connect(tabBar,&QTabBar::customContextMenuRequested,this,[=](const QPoint &pos) {
                                                                                                                     int index = tabBar->tabAt(pos);
                                                                                                                         if (index == -1) {
@@ -1054,6 +1062,7 @@ public:
                                                                                                         }
                                         );
 
+                                // Ctrl + Shift + w Shortcut Creation
                                 QShortcut *CloseWindow;
                                 CloseWindow = new QShortcut(QKeySequence("Ctrl + Shift + W"),this);
                                 connect(CloseWindow,&QShortcut::activated,this,[=]() {
@@ -1061,7 +1070,7 @@ public:
                                                                                     }
                                         );
                                 
-                                // Ctril + D Shortcut Creation
+                                // Ctrl + D Shortcut Creation
                                 QShortcut *DuplicateCurrentTab;
                                 DuplicateCurrentTab = new QShortcut(QKeySequence("Ctrl + D"),this);
                                 connect(DuplicateCurrentTab, &QShortcut::activated,this,[=]() {
@@ -1179,7 +1188,7 @@ protected:
                                                                 dragOverlay->hide();
                                                                 event->accept();
                                                             }
-    };
+};
 
 // Calls App
 int main(int argc, char *argv[]) {
