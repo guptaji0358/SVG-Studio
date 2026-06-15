@@ -645,6 +645,14 @@ public:
                                                                                                                                                                                         }
                                                                                                                                             );
                                                                                                                         }
+    // Ctrl + Q Shortcut
+    static void exitApplicationShortcut(QAction *exitAction,QWidget *window) {
+                                                                                QObject::connect(
+                                                                                                    exitAction,&QAction::triggered,window,[=]() {
+                                                                                                                                                    window->close();
+                                                                                                                                                }
+                                                                                                );
+                                                                            }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -801,10 +809,7 @@ public:
                                 SVGStudioShortcuts::openFilesShortcut(openAction,this,&logic,tabWidget);
 
                                 // connection - closing App
-                                connect(exitAction, &QAction::triggered,this,[=]() {
-                                                                                        close();
-                                                                                    }
-                                        );
+                                SVGStudioShortcuts::exitApplicationShortcut(exitAction,this);
 
                                 // Removing Tab 
                                 connect(tabWidget, &QTabWidget::tabCloseRequested,this,[=](int index) {
