@@ -624,6 +624,72 @@ public:
                         }
 };
 
+class SVGStudioWelcomePage {
+public:
+    static QWidget* CreateWelcomePage(SVGStudioButtonLogic *buttonLogic,QWidget *parent,QTabWidget *tabWidget) {
+        QWidget *welcomePage;
+        welcomePage = new QWidget;
+        
+        QVBoxLayout *welcomeLayout;
+        welcomeLayout = new QVBoxLayout;
+
+        QHBoxLayout *welcomeMainLayout;
+        welcomeMainLayout = new QHBoxLayout;
+
+        QVBoxLayout *leftLayout;
+        leftLayout = new QVBoxLayout;
+
+        QLabel *welcomeToTheSvgStudioLabel;
+        welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
+        welcomeToTheSvgStudioLabel->setStyleSheet(Style::welcomeToTheSvgStudioLabelStyle());
+
+        QLabel *welcomePageStartLabel;
+        welcomePageStartLabel =new QLabel("Open, Preview and Manage SVG Files");
+        welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
+
+        QPushButton *newFileButton;
+        newFileButton = new QPushButton("New File...");
+
+        newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
+        newFileButton->setIconSize(QSize(32,32));
+        newFileButton->setStyleSheet(Style::welcomeButtonStyle());
+
+        QPushButton *openFileButton;
+        openFileButton = new QPushButton("Open File...");
+        openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
+        openFileButton->setIconSize(QSize(32,32));
+        openFileButton->setStyleSheet(Style::welcomeButtonStyle());
+        QObject::connect(openFileButton,QPushButton::clicked,parent,[=]() {buttonLogic->openFileButtonLogic(parent,tabWidget);});
+
+        QPushButton *openFolderButton;
+        openFolderButton =new QPushButton("Open Folder...");
+        openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
+        openFolderButton->setIconSize(QSize(32,32));
+        openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
+        QObject::connect(openFolderButton,&QPushButton::clicked,parent,[=]() {buttonLogic->openFolderButtonLogic(parent,tabWidget);});
+
+        QPushButton *convertToSvgButton;
+        convertToSvgButton =new QPushButton("Convert to SVG...");
+        convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
+        convertToSvgButton->setIconSize(QSize(32,32));
+        convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
+
+        leftLayout->addStretch();
+        leftLayout->addWidget(newFileButton);
+        leftLayout->addWidget(openFileButton);
+        leftLayout->addWidget(openFolderButton);
+        leftLayout->addWidget(convertToSvgButton);
+
+        welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
+        welcomeLayout->addWidget(welcomePageStartLabel);
+        welcomeMainLayout->addLayout(leftLayout,1);
+        welcomeMainLayout->addStretch();
+        welcomeLayout->addLayout(welcomeMainLayout);
+        welcomePage->setLayout(welcomeLayout);
+        return welcomePage;
+    }
+};
+
 class SVGStudioShortcuts {
 public:
 
@@ -717,7 +783,7 @@ public:
                                                                                                 );
                                                                             }
 
-   // Creation - Ctrl + Shift + T Shortcut
+    // Creation - Ctrl + Shift + T Shortcut
    static void restoreClosedTabShortcut(QWidget *window,QTabWidget *tabWidget,QStack<QString> *closedTabs) {
                                                                                                             QShortcut *restoreShortcut;
                                                                                                             restoreShortcut = new QShortcut(QKeySequence("Ctrl + Shift + T"),window);
@@ -735,6 +801,19 @@ public:
                                                                                                                                                                                     }
                                                                                                                             );
                                                                                                         }
+
+    // Creation - Ctrl + Shift + N Shortcut
+    static void NewWelcomeTabShortcut(QWidget *window,QTabWidget *tabWidget,SVGStudioButtonLogic *buttonLogic) {
+                                                                                                                    QShortcut *newTabShortcut;
+                                                                                                                    newTabShortcut = new QShortcut(QKeySequence("Ctrl+Shift+N"),window);
+                                                                                                                    QObject::connect(newTabShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                                            QWidget *welcomePage;
+                                                                                                                                                                                            welcomePage =SVGStudioWelcomePage::CreateWelcomePage(buttonLogic,window,tabWidget);
+                                                                                                                                                                                            tabWidget->addTab(welcomePage,"Welcome");
+                                                                                                                                                                                            tabWidget->setCurrentWidget(welcomePage);
+                                                                                                                                                                                        }
+                                                                                                                                    );
+                                                                                                                }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1060,19 +1139,11 @@ public:
                                 // call - Ctrl + Shift + Tab shortcut
                                 SVGStudioShortcuts::previousTabShortcut(this,tabWidget);
 
-                                // Ctrl + Shift + T Shortcut Creation
+                                // Call - Ctrl + Shift + T Shortcut
                                 SVGStudioShortcuts::restoreClosedTabShortcut(this,tabWidget,&closedTabs);
 
-                                // Ctrl + Shift + N shortcut creation
-                                QShortcut *openNewWelcomeTabShortCut;
-                                openNewWelcomeTabShortCut = new QShortcut(QKeySequence("Ctrl + Shift + N"),this);
-                                connect(openNewWelcomeTabShortCut,&QShortcut::activated,this,[=]() {
-                                                                                                        QSvgWidget *welcomeWidget;
-                                                                                                        welcomeWidget = new QSvgWidget;
-                                                                                                        tabWidget->addTab(welcomeWidget,"Welcome");
-                                                                                                        tabWidget->setCurrentWidget(welcomeWidget);
-                                                                                                    }
-                                        );
+                                //  Call - Ctrl + Shift + N shortcut
+                                SVGStudioShortcuts::NewWelcomeTabShortcut(this,tabWidget,&buttonLogic);
 
                                 // Ctrl + Alt + N Shortcut Creation
                                 QShortcut *openNewWelcomeTabWindowShortCut;
