@@ -703,8 +703,19 @@ public:
                                                                                                                                                 }
                                                                                             );
                                                                         }
-
-    
+    // Creation - Ctrl + Shift + Tab
+    static void previousTabShortcut(QWidget *window,QTabWidget *tabWidget) {
+                                                                                QShortcut *previousTabShortcut;
+                                                                                previousTabShortcut = new QShortcut(QKeySequence("Ctrl + Shift + Tab"),window);
+                                                                                QObject::connect(previousTabShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                            if(tabWidget->count() > 1) {
+                                                                                                                                                                                            int previousIndex;
+                                                                                                                                                                                            previousIndex = (tabWidget->currentIndex() - 1 + tabWidget->count())% tabWidget->count();
+                                                                                                                                                                                            tabWidget->setCurrentIndex(previousIndex);
+                                                                                                                                                                                        }
+                                                                                                                                                        }
+                                                                                                );
+                                                                            }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1027,21 +1038,8 @@ public:
                                 // Call - Ctrl + Tab shortcut
                                 SVGStudioShortcuts::nextTabShortcut(this,tabWidget);
 
-                                // Ctrl + Shift + Tab shortcut Creation
-                                QShortcut *previousTabShortCut;
-                                previousTabShortCut = new QShortcut(QKeySequence("Ctrl + Shift + Tab"),this);
-                                connect(previousTabShortCut, &QShortcut::activated,this,[=]() {
-                                                                                                    int index;
-                                                                                                    index = tabWidget->currentIndex();
-                                                                                                    if (tabWidget->count() > 0) {
-                                                                                                                                    index--;
-                                                                                                                                    if (index < 0) {
-                                                                                                                                                        index = tabWidget->count() - 1;
-                                                                                                                                                    }
-                                                                                                                                    tabWidget->setCurrentIndex(index);
-                                                                                                                                }
-                                                                                                }
-                                        );
+                                // call - Ctrl + Shift + Tab shortcut
+                                SVGStudioShortcuts::previousTabShortcut(this,tabWidget);
 
                                 // Ctrl + Shift + T Shortcut Creation
                                 QShortcut *restoreTabShortCut;
