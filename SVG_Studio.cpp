@@ -901,6 +901,16 @@ public:
                                                                                                                                                                                         }
                                                                                                                                     );
                                                                                                                 }
+
+    // Creation - Ctrl + Alt + N Shortcut
+    static void createNewWindowShortcut(QWidget *window,std::function<void() > createWindow) {
+                                                                                                QShortcut *shortcut;
+                                                                                                shortcut = new QShortcut(QKeySequence("Ctrl + Alt + N"),window);
+                                                                                                QObject::connect(shortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                createWindow();
+                                                                                                                                                            }
+                                                                                                                );
+                                                                                            }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1165,15 +1175,13 @@ public:
                                 //  Call - Ctrl + Shift + N shortcut
                                 SVGStudioShortcuts::NewWelcomeTabShortcut(this,tabWidget,&buttonLogic);
 
-                                // Ctrl + Alt + N Shortcut Creation
-                                QShortcut *openNewWelcomeTabWindowShortCut;
-                                openNewWelcomeTabWindowShortCut = new QShortcut(QKeySequence("Ctrl + Alt + N"),this);
-                                connect(openNewWelcomeTabWindowShortCut,&QShortcut::activated,this,[=]() {
-                                                                                                            SVGStudioGui *newWindow;
-                                                                                                            newWindow = new SVGStudioGui;
-                                                                                                            newWindow->show();
-                                                                                                        }
-                                        );
+                                // Call - Ctrl + Alt + N Shortcut
+                                SVGStudioShortcuts::createNewWindowShortcut(this,[]() {
+                                                                                            SVGStudioGui *newWindow;
+                                                                                            newWindow = new SVGStudioGui;
+                                                                                            newWindow->show();
+                                                                                        }
+                                                                            );
 
                                 // Ctrl + Shift + w Shortcut Creation
                                 QShortcut *CloseWindow;
