@@ -44,6 +44,7 @@ Project - SVG Studio
 #include<QGroupBox>
 #include<QRadioButton>
 #include<QButtonGroup>
+#include<QMovie>
 
 // Paths Collection class
 class FilePaths {
@@ -55,6 +56,7 @@ public:
                     static inline const QString editButtonIconPath = ":/EDIT_BUTTON_ICON.svg";
                     static inline const QString downArrowIconPath = ":/DOWN_ARROW_ICON.svg";
                     static inline const QString rightArrowIconPath = ":/RIGHT_ARROW_ICON.svg";
+                    static inline const QString DragDropAnimationGifPath = ":/DRAG_AND_DROP_ANIMATION.gif";
                 };
 
 class SVGStudioShortcutEditDialog : public QDialog {
@@ -636,6 +638,9 @@ private:
     QTabWidget *tabWidget;
     QFrame *dragOverlay;
     QLabel *dragOverlayLabel;
+    QSvgWidget *dragAnimation;
+    QLabel *dragAnimationLabel;
+    QMovie *dragAnimationMovie;
 
 public:
     SVGStudioWelcomePage(SVGStudioButtonLogic *buttonLogic,QTabWidget *tabWidget,QWidget *parent = nullptr): QWidget(parent) {
@@ -653,6 +658,7 @@ public:
 private:
 
     void CreateWidgets() {
+                            // Label - Add a  Label of Welcome To The Svg  Studio
                             welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
                             welcomeToTheSvgStudioLabel->setStyleSheet(Style::welcomeToTheSvgStudioLabelStyle());
 
@@ -692,13 +698,6 @@ private:
                             QVBoxLayout *leftLayout;
                             leftLayout = new QVBoxLayout;
 
-                            // QVBoxLayout *overlayLayout;
-                            // overlayLayout = new QVBoxLayout;
-                            // overlayLayout->addStretch();
-                            // overlayLayout->addWidget(dragOverlayLabel,0,Qt::AlignCenter);
-                            // overlayLayout->addStretch();
-                            // dragOverlay->setLayout(overlayLayout);
-
                             leftLayout->addStretch();
                             leftLayout->addWidget(newFileButton);
                             leftLayout->addWidget(openFileButton);
@@ -708,6 +707,7 @@ private:
                             welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
                             welcomeLayout->addWidget(welcomePageStartLabel);
                             welcomeMainLayout->addLayout(leftLayout,1);
+                            // welcomeMainLayout->addWidget(dragAnimation,1);
                             welcomeMainLayout->addStretch();
                             welcomeLayout->addLayout(welcomeMainLayout);
                             setLayout(welcomeLayout);
@@ -723,21 +723,25 @@ private:
 
     void CreateDragOverlay() {
                                 dragOverlay = new QFrame(this);
-                                dragOverlayLabel =new QLabel("Drop SVG Here",dragOverlay);
-                                dragOverlay->setStyleSheet(Style::dragOverlayStyle());
-                                dragOverlayLabel->setStyleSheet(Style::DropOverlayLabelStyle());
+                                dragAnimationLabel = new QLabel(dragOverlay);
+                                dragAnimationLabel = new QLabel(dragOverlay);
+                                dragAnimationLabel->setGeometry(dragOverlay->rect());
+                                dragAnimationLabel->setScaledContents(true);
 
-                                QVBoxLayout *overlayLayout =new QVBoxLayout;
+                                dragAnimationMovie = new QMovie(FilePaths::DragDropAnimationGifPath);
+                                dragAnimationLabel->setMovie(dragAnimationMovie);
+                                dragAnimationMovie->start();
+                                
+                                dragOverlay->setGeometry(rect());
+                                dragOverlay->raise();
+                                dragOverlay->setStyleSheet("background-color:black;");
 
-                                overlayLayout->addStretch();
-                                overlayLayout->addWidget(dragOverlayLabel,0,Qt::AlignCenter);
-                                overlayLayout->addStretch();
-                                dragOverlay->setLayout(overlayLayout);
                                 dragOverlay->hide();
                             }
 
 protected:
 
+    // Result - Show the Drag And Drop Animation While file seems  Dropping and tells Drop Here
     void dragEnterEvent(QDragEnterEvent *event) override {
         if(event->mimeData()->hasUrls()) {
                                             dragOverlay->show();
@@ -745,11 +749,13 @@ protected:
                                         }
     }
 
+    // Result - +Hide The Animation While File Didn't Uploaded
     void dragLeaveEvent(QDragLeaveEvent *event) override {
                                                             dragOverlay->hide();
                                                             event->accept();
                                                         }
-
+    
+    // Result - Stop the Drag Drop Animation  then Add Tabs or Tab
     void dropEvent(QDropEvent *event) override {
                                                     dragOverlay->hide();
                                                     QList<QUrl> urls = event->mimeData()->urls();
@@ -767,6 +773,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override {
                                                         QWidget::resizeEvent(event);
                                                         dragOverlay->setGeometry(rect());
+                                                        dragAnimationLabel->setGeometry(dragOverlay->rect());
                                                     }
 };
 

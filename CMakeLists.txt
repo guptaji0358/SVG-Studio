@@ -24,6 +24,7 @@ qt_add_resources(SVGStudio app_resources
         EDIT_BUTTON_ICON.svg
         DOWN_ARROW_ICON.svg
         RIGHT_ARROW_ICON.svg
+        DRAG_AND_DROP_ANIMATION.gif
 )
 
 target_link_libraries(SVGStudio PRIVATE
