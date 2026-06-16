@@ -911,6 +911,16 @@ public:
                                                                                                                                                             }
                                                                                                                 );
                                                                                             }
+
+    // Creation - Ctrl + Shift + W Shortcut
+    static void closeWindowShortcut(QWidget *window) {
+                                                        QShortcut *shortcut;
+                                                        shortcut = new QShortcut(QKeySequence("Ctrl+Shift+W"),window);
+                                                        QObject::connect(shortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                            window->close();
+                                                                                                                        }
+                                                                        );
+                                                    }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1203,13 +1213,10 @@ public:
                                                                                         }
                                                                             );
 
-                                // Ctrl + Shift + w Shortcut Creation
-                                QShortcut *CloseWindow;
-                                CloseWindow = new QShortcut(QKeySequence("Ctrl + Shift + W"),this);
-                                connect(CloseWindow,&QShortcut::activated,this,[=]() {
-                                                                                        close();
-                                                                                    }
-                                        );
+                                // Ctrl + Shift + W Shortcut Creation
+                                SVGStudioShortcuts::closeWindowShortcut(
+                                                                            this
+                                                                        );
                                 
                                 // Ctrl + D Shortcut Creation
                                 QShortcut *DuplicateCurrentTab;
