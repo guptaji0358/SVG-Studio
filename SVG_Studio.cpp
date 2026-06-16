@@ -1158,22 +1158,42 @@ public:
                                         );
 
                                 // Call - ctrl + 1 - 9 shortcut
-                                SVGStudioShortcuts::createTabNumberShortcut(this,tabWidget);
+                                SVGStudioShortcuts::createTabNumberShortcut(
+                                                                                this,
+                                                                                tabWidget
+                                                                            );
                             
                                 // call - Ctrl + W shortvut
-                                SVGStudioShortcuts::closeCurrentTabShortcut(this,tabWidget,&closedTabs);
+                                SVGStudioShortcuts::closeCurrentTabShortcut(this,
+                                                                                    tabWidget,
+                                                                                    &closedTabs
+                                                                                );
 
                                 // Call - Ctrl + Tab shortcut
-                                SVGStudioShortcuts::nextTabShortcut(this,tabWidget);
+                                SVGStudioShortcuts::nextTabShortcut(
+                                                                        this,
+                                                                        tabWidget
+                                                                    );
 
                                 // call - Ctrl + Shift + Tab shortcut
-                                SVGStudioShortcuts::previousTabShortcut(this,tabWidget);
+                                SVGStudioShortcuts::previousTabShortcut(
+                                                                            this,
+                                                                            tabWidget
+                                                                        );
 
                                 // Call - Ctrl + Shift + T Shortcut
-                                SVGStudioShortcuts::restoreClosedTabShortcut(this,tabWidget,&closedTabs);
+                                SVGStudioShortcuts::restoreClosedTabShortcut(
+                                                                                this,
+                                                                                tabWidget,
+                                                                                &closedTabs
+                                                                            );
 
                                 //  Call - Ctrl + Shift + N shortcut
-                                SVGStudioShortcuts::NewWelcomeTabShortcut(this,tabWidget,&buttonLogic);
+                                SVGStudioShortcuts::NewWelcomeTabShortcut(
+                                                                            this,
+                                                                            tabWidget,
+                                                                            &buttonLogic
+                                                                        );
 
                                 // Call - Ctrl + Alt + N Shortcut
                                 SVGStudioShortcuts::createNewWindowShortcut(this,[]() {
