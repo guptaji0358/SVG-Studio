@@ -418,87 +418,132 @@ public:
                                                                                                                 tabWidget->setCurrentWidget(svgWidget);
                                                                                                             }
                                                                     }
-
+                        
     void newFileButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
-                                                                        QDialog dialog;
-                                                                        dialog.setWindowTitle("New SVG File");
+    QDialog dialog(parent);
 
-                                                                        QLabel *titleLabel;
+    QLabel *titleLabel;
 
-                                                                        QLineEdit *fileNameEdit;
-                                                                        fileNameEdit = new QLineEdit;
+    QLineEdit *fileNameEdit;
+    QLineEdit *pathEdit;
 
-                                                                        QLineEdit *pathEdit;
-                                                                        pathEdit = new QLineEdit;
+    QPushButton *browseButton;
+    QPushButton *createButton;
+    QPushButton *cancelButton;
 
-                                                                        QPushButton *browseButton;
-                                                                        browseButton = new QPushButton("Browse");
-                                                                        browseButton->setCursor(Qt::PointingHandCursor);
-                                                                        browseButton->setToolTip("Browse PathcreateSave ifle");
-                                                                        
-                                                                        QPushButton *createButton;
-                                                                        createButton = new QPushButton("Create");
-                                                                        createButton->setCursor(Qt::PointingHandCursor);
-                                                                        createButton->setToolTip("create New SVG File");
-                                                                   
-                                                                        QPushButton *cancelButton;
-                                                                        cancelButton = new QPushButton("Cancel");
-                                                                        cancelButton->setCursor(Qt::PointingHandCursor);
-                                                                        cancelButton->setToolTip("Cancel");
+    QButtonGroup *pathGroup;
 
-                                                                        titleLabel = new QLabel("New File");
-                                                                        fileNameEdit->setPlaceholderText("Logo");
+    QVBoxLayout *mainLayout;
+    QVBoxLayout *quickPathsLayout;
 
-                                                                        QStringList paths;
-                                                                        paths = SVGStudioDataManager::GetPaths();
+    QGroupBox *quickPathsGroup;
 
-                                                                        QButtonGroup *pathGroup;
-                                                                        pathGroup = new QButtonGroup(&dialog);
+    auto CreateWidgets = [&]() {
+                                    // QDialog dialog;
+                                    dialog.setWindowTitle("New SVG File");
 
-                                                                        QVBoxLayout *quickPathsLayout;
-                                                                        quickPathsLayout = new QVBoxLayout;
+                                    // QLabel *titleLabel;
+                                    titleLabel = new QLabel("New File");
 
-                                                                        for(QString path : paths) {
-                                                                                                        QRadioButton *radio;
-                                                                                                        radio = new QRadioButton(path);
-                                                                                                        pathGroup->addButton(radio);
-                                                                                                        quickPathsLayout->addWidget(radio);
-                                                                                                        if(pathGroup->buttons().count() == 1) {
-                                                                                                                                                    radio->setChecked(true);
-                                                                                                                                                    pathEdit->setText(path);
-                                                                                                                                                }
-                                                                                                        QObject::connect(radio,&QRadioButton::toggled,[&]() {
-                                                                                                                                                        if(radio->isChecked()) {
-                                                                                                                                                                                    pathEdit->setText(path);
-                                                                                                                                                                                }
-                                                                                                                                                    }
-                                                                                                                );
+                                    // QLineEdit *fileNameEdit;
+                                    fileNameEdit = new QLineEdit;
+                                    fileNameEdit->setPlaceholderText("Logo");
 
-                                                                                                    }
+                                    // QLineEdit *pathEdit;
+                                    pathEdit = new QLineEdit;
 
-                                                                        QVBoxLayout *mainLayout = new QVBoxLayout;
-                                                                        mainLayout->addWidget(titleLabel);
-                                                                        mainLayout->addWidget(fileNameEdit);
-                                                                        mainLayout->addWidget(pathEdit);
-                                                                        mainLayout->addWidget(browseButton);
+                                    // QPushButton *browseButton;
+                                    browseButton = new QPushButton("Browse");
+                                    browseButton->setCursor(Qt::PointingHandCursor);
+                                    browseButton->setToolTip("Browse PathcreateSave ifle");
+                                    
+                                    // QPushButton *createButton;
+                                    createButton = new QPushButton("Create");
+                                    createButton->setCursor(Qt::PointingHandCursor);
+                                    createButton->setToolTip("create New SVG File");
+                                
+                                    // QPushButton *cancelButton;
+                                    cancelButton = new QPushButton("Cancel");
+                                    cancelButton->setCursor(Qt::PointingHandCursor);
+                                    cancelButton->setToolTip("Cancel");
 
-                                                                        QGroupBox *quickPathsGroup = new QGroupBox("Quick Paths");
-                                                                        quickPathsGroup->setLayout(quickPathsLayout);
+                                    pathGroup = new QButtonGroup(&dialog);
+                                    quickPathsGroup = new QGroupBox("Quick Paths");
+                                };
 
-                                                                        mainLayout->addWidget(quickPathsGroup);
+    auto CreateLayouts = [&]() {
+                                    mainLayout = new QVBoxLayout;
+                                    quickPathsLayout = new QVBoxLayout;
 
-                                                                        QHBoxLayout *buttonLayout = new QHBoxLayout;
-                                                                        buttonLayout->addStretch();
-                                                                        buttonLayout->addWidget(cancelButton);
-                                                                        buttonLayout->addWidget(createButton);
+                                    QStringList paths;
+                                    paths = SVGStudioDataManager::GetPaths();
+                                    // QButtonGroup *pathGroup;
+                                    for(QString path : paths) {
+                                                                    QRadioButton *radio;
+                                                                    radio = new QRadioButton(path);
+                                                                    pathGroup->addButton(radio);
+                                                                    quickPathsLayout->addWidget(radio);
+                                                                    if(pathGroup->buttons().count() == 1) {
+                                                                                                                radio->setChecked(true);
+                                                                                                                pathEdit->setText(path);
+                                                                                                            }
+                                                                    QObject::connect(radio,&QRadioButton::toggled,[&]() {
+                                                                                                                    if(radio->isChecked()) {
+                                                                                                                                                pathEdit->setText(path);
+                                                                                                                                            }
+                                                                                                                }
+                                                                            );
 
-                                                                        mainLayout->addLayout(buttonLayout);
+                                                                }
 
-                                                                        dialog.setLayout(mainLayout);
-                                                                        dialog.accept();
-                                                                        dialog.exec();
-                                                                        // dialog.reject();
-                                                                    }
+                                    quickPathsGroup->setLayout(quickPathsLayout);
+                                    mainLayout->addWidget(titleLabel);
+                                    mainLayout->addWidget(fileNameEdit);
+                                    mainLayout->addWidget(pathEdit);
+                                    mainLayout->addWidget(browseButton);
+                                    mainLayout->addWidget(quickPathsGroup);
+
+                                    QHBoxLayout *buttonLayout;
+                                    buttonLayout = new QHBoxLayout;
+                                    buttonLayout->addStretch();
+                                    buttonLayout->addWidget(cancelButton);
+                                    buttonLayout->addWidget(createButton);
+
+                                    mainLayout->addLayout(buttonLayout);
+                                    dialog.setLayout(mainLayout);
+                                };
+
+    auto CreateConnections = [&]() {
+                                       QObject::connect(browseButton,&QPushButton::clicked,[&]() {
+                                                                                            QString path;
+                                                                                            path = QFileDialog::getExistingDirectory(
+                                                                                                                                        parent,
+                                                                                                                                        "Select Folder"
+                                                                                                                                    );
+
+                                                                                            if(!path.isEmpty()) {
+                                                                                                                    pathEdit->setText(path);
+                                                                                                                }
+                                                                                        }
+                                                );
+
+                                        QObject::connect(cancelButton,&QPushButton::clicked,[&]() {
+                                                                                            dialog.reject();
+                                                                                        }
+                                                );
+
+                                        QObject::connect(createButton,&QPushButton::clicked,[&]() {
+                                                                                            // create svg logic here later
+                                                                                        }
+                                        );
+                                    };
+
+    CreateWidgets();
+    CreateLayouts();
+    CreateConnections();
+
+    dialog.exec();
+}
 
     void openFolderButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
                                                                             QString folderPath;
