@@ -945,6 +945,49 @@ public:
                                                                                                                         }
                                                                         );
                                                     }
+    // Creation - Ctrl + D Shortcut
+    static void duplicateCurrentTabShortcut(QWidget *window,QTabWidget *tabWidget) {
+                                                                                        QShortcut *duplicateTabShortcut;
+                                                                                        duplicateTabShortcut = new QShortcut(QKeySequence("Ctrl + D"),window);
+                                                                                        QObject::connect(duplicateTabShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                    int index;
+                                                                                                                                                                    index = tabWidget->currentIndex();
+                                                                                                                                                                    if (index == -1) {
+                                                                                                                                                                                        return;
+                                                                                                                                                                                    }
+                                                                                                                                                                    QString filePath;
+                                                                                                                                                                    filePath = tabWidget->tabToolTip(index);
+                                                                                                                                                                    if (filePath.isEmpty()) {
+                                                                                                                                                                                                return;
+                                                                                                                                                                                            }
+                                                                                                                                                                    SVGStudioEditorTab *duplicateSvgWidget;
+                                                                                                                                                                    duplicateSvgWidget = new SVGStudioEditorTab;
+                                                                                                                                                                    duplicateSvgWidget->getPreview()->load(filePath);
+                                                                                                                                                                    tabWidget->addTab(duplicateSvgWidget,QFileInfo(filePath).fileName());
+                                                                                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(duplicateSvgWidget),filePath);
+                                                                                                                                                                    tabWidget->setCurrentWidget(duplicateSvgWidget);
+                                                                                                                                                                }
+                                                                                                        );
+                                                                                    }
+
+    // Creation - F2 Shortcut
+    static void renameCurrentTabShortcut(QWidget *window,QTabWidget *tabWidget) {
+                                                                                    QShortcut *renameShortcut;
+                                                                                    renameShortcut = new QShortcut(QKeySequence(Qt::Key_F2),window);
+                                                                                    QObject::connect(renameShortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                            int index;
+                                                                                                                                                            index = tabWidget->currentIndex();
+                                                                                                                                                            if (index == -1) {
+                                                                                                                                                                                return;
+                                                                                                                                                                            }
+                                                                                                                                                            QString newName;
+                                                                                                                                                            newName = QInputDialog::getText(window,"Rename Tab","New Name");
+                                                                                                                                                            if (!newName.isEmpty()) {
+                                                                                                                                                                                        tabWidget->setTabText(index,newName);
+                                                                                                                                                                                    }
+                                                                                                                                                        }
+                                                                                                    );
+                                                                                }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1237,51 +1280,23 @@ public:
                                                                                         }
                                                                             );
 
-                                // Ctrl + Shift + W Shortcut Creation
+                                // Call - Ctrl + Shift + W Shortcut
                                 SVGStudioShortcuts::closeWindowShortcut(
                                                                             this
                                                                         );
-                                
-                                // Ctrl + D Shortcut Creation
-                                QShortcut *DuplicateCurrentTab;
-                                DuplicateCurrentTab = new QShortcut(QKeySequence("Ctrl + D"),this);
-                                connect(DuplicateCurrentTab, &QShortcut::activated,this,[=]() {
-                                                                                                    int index;
-                                                                                                    index = tabWidget->currentIndex();
-                                                                                                    if (index == -1) {
-                                                                                                                        return;
-                                                                                                                    }
-                                                                                                    QString filePath;
-                                                                                                    filePath = tabWidget->tabToolTip(index);
-                                                                                                    if (filePath.isEmpty()) {
-                                                                                                                                return;
-                                                                                                                            }
-                                                                                                    SVGStudioEditorTab *duplicateSvgWidget;
-                                                                                                    duplicateSvgWidget = new SVGStudioEditorTab;
-                                                                                                    duplicateSvgWidget->getPreview()->load(filePath);
-                                                                                                    tabWidget->addTab(duplicateSvgWidget,QFileInfo(filePath).fileName());
-                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(duplicateSvgWidget),filePath);
-                                                                                                    tabWidget->setCurrentWidget(duplicateSvgWidget);
-                                                                                                }
-                            );
 
-                            // F2 Shortcut creation 
-                            QShortcut *renameTabShortCut;
-                            renameTabShortCut = new QShortcut(QKeySequence("F2"),this);
-                            connect(renameTabShortCut,&QShortcut::activated,this,[=]() {
-                                                                                            int index;
-                                                                                            index = tabWidget->currentIndex();
-                                                                                            if (index == -1) {
-                                                                                                                return;
-                                                                                                            }
-                                                                                            QString newName;
-                                                                                            newName = QInputDialog::getText(this,"Rename Tab","New Name");
-                                                                                            if (!newName.isEmpty()) {
-                                                                                                                        tabWidget->setTabText(index,newName);
-                                                                                                                    }
-                                                                                        }
-                                    );
-                        }
+                                // Call - Ctrl + D Shortcut
+                                SVGStudioShortcuts::duplicateCurrentTabShortcut(
+                                                                                    this,
+                                                                                    tabWidget
+                                                                                );
+
+                            // Call - F2 Shortcut
+                            SVGStudioShortcuts::renameCurrentTabShortcut(
+                                                                            this,
+                                                                            tabWidget
+                                                                        );
+                            }
 
     void CreateWidgets() {
                             tabWidget = new QTabWidget;
