@@ -419,9 +419,86 @@ public:
                                                                                                             }
                                                                     }
 
-    void newFileButtonLogic() {
+    void newFileButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
+                                                                        QDialog dialog;
+                                                                        dialog.setWindowTitle("New SVG File");
 
-    }
+                                                                        QLabel *titleLabel;
+
+                                                                        QLineEdit *fileNameEdit;
+                                                                        fileNameEdit = new QLineEdit;
+
+                                                                        QLineEdit *pathEdit;
+                                                                        pathEdit = new QLineEdit;
+
+                                                                        QPushButton *browseButton;
+                                                                        browseButton = new QPushButton("Browse");
+                                                                        browseButton->setCursor(Qt::PointingHandCursor);
+                                                                        browseButton->setToolTip("Browse PathcreateSave ifle");
+                                                                        
+                                                                        QPushButton *createButton;
+                                                                        createButton = new QPushButton("Create");
+                                                                        createButton->setCursor(Qt::PointingHandCursor);
+                                                                        createButton->setToolTip("create New SVG File");
+                                                                   
+                                                                        QPushButton *cancelButton;
+                                                                        cancelButton = new QPushButton("Cancel");
+                                                                        cancelButton->setCursor(Qt::PointingHandCursor);
+                                                                        cancelButton->setToolTip("Cancel");
+
+                                                                        titleLabel = new QLabel("New File");
+                                                                        fileNameEdit->setPlaceholderText("Logo");
+
+                                                                        QStringList paths;
+                                                                        paths = SVGStudioDataManager::GetPaths();
+
+                                                                        QButtonGroup *pathGroup;
+                                                                        pathGroup = new QButtonGroup(&dialog);
+
+                                                                        QVBoxLayout *quickPathsLayout;
+                                                                        quickPathsLayout = new QVBoxLayout;
+
+                                                                        for(QString path : paths) {
+                                                                                                        QRadioButton *radio;
+                                                                                                        radio = new QRadioButton(path);
+                                                                                                        pathGroup->addButton(radio);
+                                                                                                        quickPathsLayout->addWidget(radio);
+                                                                                                        if(pathGroup->buttons().count() == 1) {
+                                                                                                                                                    radio->setChecked(true);
+                                                                                                                                                    pathEdit->setText(path);
+                                                                                                                                                }
+                                                                                                        QObject::connect(radio,&QRadioButton::toggled,[&]() {
+                                                                                                                                                        if(radio->isChecked()) {
+                                                                                                                                                                                    pathEdit->setText(path);
+                                                                                                                                                                                }
+                                                                                                                                                    }
+                                                                                                                );
+
+                                                                                                    }
+
+                                                                        QVBoxLayout *mainLayout = new QVBoxLayout;
+                                                                        mainLayout->addWidget(titleLabel);
+                                                                        mainLayout->addWidget(fileNameEdit);
+                                                                        mainLayout->addWidget(pathEdit);
+                                                                        mainLayout->addWidget(browseButton);
+
+                                                                        QGroupBox *quickPathsGroup = new QGroupBox("Quick Paths");
+                                                                        quickPathsGroup->setLayout(quickPathsLayout);
+
+                                                                        mainLayout->addWidget(quickPathsGroup);
+
+                                                                        QHBoxLayout *buttonLayout = new QHBoxLayout;
+                                                                        buttonLayout->addStretch();
+                                                                        buttonLayout->addWidget(cancelButton);
+                                                                        buttonLayout->addWidget(createButton);
+
+                                                                        mainLayout->addLayout(buttonLayout);
+
+                                                                        dialog.setLayout(mainLayout);
+                                                                        dialog.accept();
+                                                                        dialog.exec();
+                                                                        // dialog.reject();
+                                                                    }
 
     void openFolderButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
                                                                             QString folderPath;
@@ -771,6 +848,7 @@ private:
                             newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
                             newFileButton->setIconSize(QSize(32,32));
                             newFileButton->setStyleSheet(Style::welcomeButtonStyle());
+                            QObject::connect(newFileButton,&QPushButton::clicked,this,[=](){buttonLogic->newFileButtonLogic(this,tabWidget);});
 
                             openFileButton = new QPushButton("Open File...");
                             openFileButton->setToolTip("Open SVG File");
@@ -1094,6 +1172,18 @@ public:
                                                                                                                                                         }
                                                                                                     );
                                                                                 }
+
+    // Creation - Ctrl + N Shortcut
+    static void newFileShortcut(QWidget *window,SVGStudioButtonLogic *buttonLogic,QTabWidget *tabWidget) {
+                                                                                                            QShortcut *shortcut = new QShortcut(QKeySequence("Ctrl + N"), window);
+                                                                                                            QObject::connect(shortcut,&QShortcut::activated,window,[=]() {
+                                                                                                                                                                            buttonLogic->newFileButtonLogic(
+                                                                                                                                                                                                                window,
+                                                                                                                                                                                                                tabWidget
+                                                                                                                                                                                                            );
+                                                                                                                                                                        }
+                                                                                                                            );
+                                                                                                        }
 };
 
 class SVGStudioGui : public QMainWindow {
@@ -1402,6 +1492,13 @@ public:
                                                                             this,
                                                                             tabWidget
                                                                         );
+
+                            // Call - Ctrl + N Shortcut
+                            SVGStudioShortcuts::newFileShortcut(
+                                                                    this,
+                                                                    &buttonLogic,
+                                                                    tabWidget
+                                                                );
                             }
 
     void CreateWidgets() {
