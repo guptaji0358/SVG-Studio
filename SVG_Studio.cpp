@@ -45,6 +45,10 @@ Project - SVG Studio
 #include<QRadioButton>
 #include<QButtonGroup>
 #include<QMovie>
+#include<QJsonDocument>
+#include<QJsonObject>
+#include<QJsonArray>
+#include<QFile>
 
 // Paths Collection class
 class FilePaths {
@@ -59,7 +63,92 @@ public:
                     static inline const QString DragDropOfTwoSvgsAnimationGifPath = ":/2_SVG_DRAG_DROP_ANIMATION.gif";
                     static inline const QString DragDropOfOneSvgsAnimationGifPath = ":/1_SVG_DRAG_DROP_ANIMATION.gif";
                     static inline const QString DragDropOfMoreThanThreeSvgsAnimationGifPath = ":/3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString DataFileName ="SVGStudioData.json";
                 };
+
+class SVGStudioDataManager {
+public:
+    static QString GetDataFilePath() {
+                                        QFile file(FilePaths::DataFileName);
+                                        if(!file.exists()) {
+                                                                CreateDefaultJson();
+                                                            }
+
+                                        return FilePaths::DataFileName;
+                                    }
+
+    static void CreateDefaultJson() {
+                                        QFile file(FilePaths::DataFileName);
+                                        if(file.open(QIODevice::WriteOnly)) {
+                                                                                QJsonObject root;
+                                                                                root["saved_paths"] = QJsonArray();
+                                                                                file.write(QJsonDocument(root).toJson());
+                                                                                file.close();
+                                                                            }
+                                    }
+
+    static QJsonObject LoadData() {
+                                        QFile file(GetDataFilePath());
+                                        if(!file.open(QIODevice::ReadOnly)) {
+                                                                                return QJsonObject();
+                                                                            }
+
+                                        QByteArray jsonData;
+                                        jsonData = file.readAll();
+                                        file.close();
+                                        return QJsonDocument::fromJson(jsonData).object();
+                                    }
+
+    static void SaveData(QJsonObject data) {
+                                                QFile file(GetDataFilePath());
+                                                if(file.open(QIODevice::WriteOnly)) {
+                                                                                        file.write(QJsonDocument(data).toJson());
+                                                                                        file.close();
+                                                                                    }
+                                            }
+
+    static void AddPath(QString path) {
+                                            QJsonObject data;
+                                            data = LoadData();
+                                            QJsonArray paths;
+                                            paths = data["saved_paths"].toArray();
+                                            paths.append(path);
+                                            data["saved_paths"] = paths;
+                                            SaveData(data);
+                                        }
+
+    static QStringList GetPaths() {
+                                        QStringList result;
+                                        QJsonObject data;
+                                        data = LoadData();
+                                        QJsonArray paths;
+                                        paths = data["saved_paths"].toArray();
+                                        for(QJsonValue value : paths) {
+                                                                            result.append(
+                                                                                                value.toString()
+                                                                                            );
+                                                                        }
+
+                                        return result;
+                                    }
+
+    static void RemovePath(QString path) {
+                                            QJsonObject data;
+                                            data = LoadData();
+                                            QJsonArray paths;
+                                            paths = data["saved_paths"].toArray();
+                                            QJsonArray newPaths;
+                                            for(QJsonValue value : paths) {
+                                                                                if(value.toString() != path) {
+                                                                                                                newPaths.append(value);
+                                                                                                            }
+                                                                            }
+
+                                            data["saved_paths"] = newPaths;
+                                            SaveData(data);
+                                        }
+};
+
 
 class SVGStudioShortcutEditDialog : public QDialog {
 private:
@@ -472,6 +561,14 @@ public:
 
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
+                                    QStringList savedPaths;
+                                    savedPaths = SVGStudioDataManager::GetPaths();
+                                    for(QString path : savedPaths) {
+                                                                        QRadioButton *pathRadio;
+                                                                        pathRadio = new QRadioButton(path);
+                                                                        pathGroup->addButton(pathRadio);
+                                                                        savedPathsLayout->addWidget(pathRadio);
+                                                                    }
 
                                     QLabel *savedPathsLabel;
                                     savedPathsLabel = new QLabel("Saved Paths");
@@ -560,7 +657,7 @@ public:
                                                                                                                                 SVGStudioMessages::invalidPath(this);
                                                                                                                                 return;
                                                                                                                             }
-                                                                                                QRegularExpression regex("^[A-Z]:[/\\\\].+");
+                                                                                                QRegularExpression regex("^[A-Z]:[/\\\\].*");
                                                                                                 if(!regex.match(path.toUpper()).hasMatch()) {
                                                                                                                                                 SVGStudioMessages::invalidPath(this);
                                                                                                                                                 return;
@@ -582,6 +679,7 @@ public:
                                                                                                 pathGroup->addButton(pathRadio);
                                                                                                 savedPathsLayout->addWidget(pathRadio);
                                                                                                 pathRadio->setChecked(true);
+                                                                                                SVGStudioDataManager::AddPath(path);
                                                                                                 SVGStudioMessages::Success(this);
                                                                                                 dialog.accept();
                                                                                             }
@@ -618,6 +716,7 @@ public:
                                                                                                                             }
                                                                                             pathGroup->removeButton(selectedButton);
                                                                                             savedPathsLayout->removeWidget(selectedButton);
+                                                                                            SVGStudioDataManager::RemovePath(selectedButton->text());
                                                                                             delete selectedButton;
                                                                                         }
                                 );
