@@ -56,7 +56,9 @@ public:
                     static inline const QString editButtonIconPath = ":/EDIT_BUTTON_ICON.svg";
                     static inline const QString downArrowIconPath = ":/DOWN_ARROW_ICON.svg";
                     static inline const QString rightArrowIconPath = ":/RIGHT_ARROW_ICON.svg";
-                    static inline const QString DragDropAnimationGifPath = ":/DRAG_AND_DROP_ANIMATION.gif";
+                    static inline const QString DragDropOfTwoSvgsAnimationGifPath = ":/2_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString DragDropOfOneSvgsAnimationGifPath = ":/1_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString DragDropOfMoreThanThreeSvgsAnimationGifPath = ":/3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif";
                 };
 
 class SVGStudioShortcutEditDialog : public QDialog {
@@ -707,7 +709,6 @@ private:
                             welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
                             welcomeLayout->addWidget(welcomePageStartLabel);
                             welcomeMainLayout->addLayout(leftLayout,1);
-                            // welcomeMainLayout->addWidget(dragAnimation,1);
                             welcomeMainLayout->addStretch();
                             welcomeLayout->addLayout(welcomeMainLayout);
                             setLayout(welcomeLayout);
@@ -724,11 +725,10 @@ private:
     void CreateDragOverlay() {
                                 dragOverlay = new QFrame(this);
                                 dragAnimationLabel = new QLabel(dragOverlay);
-                                dragAnimationLabel = new QLabel(dragOverlay);
                                 dragAnimationLabel->setGeometry(dragOverlay->rect());
                                 dragAnimationLabel->setScaledContents(true);
 
-                                dragAnimationMovie = new QMovie(FilePaths::DragDropAnimationGifPath);
+                                dragAnimationMovie = new QMovie(FilePaths::DragDropOfMoreThanThreeSvgsAnimationGifPath);
                                 dragAnimationLabel->setMovie(dragAnimationMovie);
                                 dragAnimationMovie->start();
                                 
@@ -743,11 +743,35 @@ protected:
 
     // Result - Show the Drag And Drop Animation While file seems  Dropping and tells Drop Here
     void dragEnterEvent(QDragEnterEvent *event) override {
-        if(event->mimeData()->hasUrls()) {
-                                            dragOverlay->show();
-                                            event->acceptProposedAction();
-                                        }
-    }
+                                                            if(event->mimeData()->hasUrls()) {
+                                                                                                QList<QUrl> urls;
+                                                                                                urls = event->mimeData()->urls();
+                                                                                                int fileCount;
+                                                                                                fileCount = urls.count();
+                                                                                                if(fileCount == 1) {
+                                                                                                                        dragAnimationMovie->stop();
+                                                                                                                        dragAnimationMovie->setFileName(FilePaths::DragDropOfOneSvgsAnimationGifPath);
+                                                                                                                        dragAnimationMovie->start();
+                                                                                                                    }
+                                                                                                else if(fileCount == 2) {
+                                                                                                                            dragAnimationMovie->stop();
+                                                                                                                            dragAnimationMovie->setFileName(FilePaths::DragDropOfTwoSvgsAnimationGifPath);
+                                                                                                                            dragAnimationMovie->start();
+                                                                                                                        }
+                                                                                                else {
+                                                                                                        dragAnimationMovie->stop();
+                                                                                                        dragAnimationMovie->setFileName(FilePaths::DragDropOfMoreThanThreeSvgsAnimationGifPath);
+                                                                                                        dragAnimationMovie->start();
+                                                                                                    }
+
+                                                                                                // dragAnimationMovie->stop();
+                                                                                                // dragAnimationMovie->setFileName(FilePaths::DragDropOfOneSvgsAnimationGifPath);
+                                                                                                // dragAnimationLabel->setMovie(dragAnimationMovie);
+                                                                                                // dragAnimationMovie->start();
+                                                                                                event->acceptProposedAction();
+                                                                                                dragOverlay->show();
+                                                                                            }
+                                                            }
 
     // Result - +Hide The Animation While File Didn't Uploaded
     void dragLeaveEvent(QDragLeaveEvent *event) override {
