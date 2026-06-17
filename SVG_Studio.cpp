@@ -757,7 +757,6 @@ public:
                                                                                                                                 }
 
 private:
-
     void CreateWidgets() {
                             // Label - Add a  Label of Welcome To The Svg  Studio
                             welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
@@ -767,23 +766,31 @@ private:
                             welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
 
                             newFileButton = new QPushButton("New File...");
+                            newFileButton->setToolTip("Create New SVG File");
+                            newFileButton->setCursor(Qt::PointingHandCursor);
                             newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
                             newFileButton->setIconSize(QSize(32,32));
                             newFileButton->setStyleSheet(Style::welcomeButtonStyle());
 
                             openFileButton = new QPushButton("Open File...");
+                            openFileButton->setToolTip("Open SVG File");
+                            openFileButton->setCursor(Qt::PointingHandCursor);
                             openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
                             openFileButton->setIconSize(QSize(32,32));
                             openFileButton->setStyleSheet(Style::welcomeButtonStyle());
                             QObject::connect(openFileButton,&QPushButton::clicked,this,[=](){buttonLogic->openFileButtonLogic(this,tabWidget);});
 
                             openFolderButton =new QPushButton("Open Folder...");
+                            openFolderButton->setToolTip("Open all SVG(s) From Folder");
+                            openFolderButton->setCursor(Qt::PointingHandCursor);
                             openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
                             openFolderButton->setIconSize(QSize(32,32));
                             openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
                             QObject::connect(openFolderButton,&QPushButton::clicked,this,[=](){buttonLogic->openFolderButtonLogic(this,tabWidget);});
 
                             convertToSvgButton =new QPushButton("Convert to SVG...");
+                            convertToSvgButton->setToolTip("Convert to SVG File");
+                            convertToSvgButton->setCursor(Qt::PointingHandCursor);
                             convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
                             convertToSvgButton->setIconSize(QSize(32,32));
                             convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
