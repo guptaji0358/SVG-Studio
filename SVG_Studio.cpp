@@ -68,6 +68,85 @@ public:
                     static inline const QString DataFileName ="SVGStudioData.json";
                 };
 
+class Style {
+public:
+    static QString welcomeToTheSvgStudioLabelStyle() {
+                                                            return
+                                                            "font-size:32px;"
+                                                            "font-weight:bold";
+                                                        }
+
+    static QString welcomePageStartLabelStyle() {
+                                                return
+                                                "font-size:14px;";
+                                            }
+    
+    static QString welcomeButtonStyle() {
+                                            return 
+                                            R"(
+                                                QPushButton {
+                                                                background-color:none;
+                                                                color:white;
+                                                                border:0px;
+                                                                border-radius:10px;
+                                                                padding:12px;
+                                                                font-size:14px;
+                                                                text-align:left;
+                                                                font-weight:bold;
+                                                            }
+
+                                                QPushButton:hover {
+                                                                        background-color:none;
+                                                                        border:1px solid #00FFFF;
+                                                                    }
+
+                                                QPushButton:pressed {
+                                                                        background-color:none;
+                                                                        color:#00FFFF;
+                                                                    }
+                                            )";
+                                        }
+
+    static QString DropOverlayLabelStyle() {
+                                return
+                                R"(
+                                        QLabel {
+                                                    color:white;
+                                                    font-size:32px;
+                                                    font-weight:bold;
+                                                }
+                                    )";
+                            }
+    
+    static QString dragOverlayStyle() {
+                                            return 
+                                            R"(
+                                                    QFrame {
+                                                                background-color: rgba(0,0,0,180);
+                                                                border: 3px dashed #00FFFF;
+                                                            }
+                                                )";
+                                        }
+
+    static QString ToggleOffStyle() {
+                                        return R"(
+                                                    QFrame {
+                                                                    background-color:#444444;
+                                                                    border-radius:12px;
+                                                                }
+                                                )";
+                                    }
+
+    static QString ToggleOnStyle() {
+                                        return R"(
+                                                    QFrame {
+                                                                    background-color:#2ECC71;
+                                                                    border-radius:12px;
+                                                                }
+                                                )";
+                                    }
+};
+
 class SVGStudioDataManager {
 public:
     static QString GetDataFilePath() {
@@ -180,10 +259,7 @@ public:
 
         background = new QFrame(this);
         background->setGeometry(0,0,44,24);
-        background->setStyleSheet(
-                                    "background:#444444;"
-                                    "border-radius:12px;"
-                                );
+        background->setStyleSheet(Style::ToggleOffStyle());
 
         knob = new QFrame(this);
         knob->setGeometry(2,2,20,20);
@@ -204,19 +280,13 @@ public:
                                         isOn = checked;
                                         animation->stop();
                                         if(isOn) {
-                                                    background->setStyleSheet(
-                                                                                "background:#2ECC71;"
-                                                                                "border-radius:12px;"
-                                                                            );
+                                                    background->setStyleSheet(Style::ToggleOnStyle());
 
                                                     animation->setStartValue(knob->pos());
                                                     animation->setEndValue(QPoint(22,2));
                                                 }
                                         else {
-                                                    background->setStyleSheet(
-                                                                                "background:#444444;"
-                                                                                "border-radius:12px;"
-                                                                            );
+                                                    background->setStyleSheet(Style::ToggleOffStyle());
 
                                                     animation->setStartValue(knob->pos());
                                                     animation->setEndValue(QPoint(2,2));
@@ -327,68 +397,6 @@ public:
                                         table->setCellWidget(row,3,editButton);
                                     }
 };
-
-class Style {
-public:
-    static QString welcomeToTheSvgStudioLabelStyle() {
-                                                            return
-                                                            "font-size:32px;"
-                                                            "font-weight:bold";
-                                                        }
-
-    static QString welcomePageStartLabelStyle() {
-                                                return
-                                                "font-size:14px;";
-                                            }
-    
-    static QString welcomeButtonStyle() {
-                                            return 
-                                            R"(
-                                                QPushButton {
-                                                                background-color:none;
-                                                                color:white;
-                                                                border:0px;
-                                                                border-radius:10px;
-                                                                padding:12px;
-                                                                font-size:14px;
-                                                                text-align:left;
-                                                                font-weight:bold;
-                                                            }
-
-                                                QPushButton:hover {
-                                                                        background-color:none;
-                                                                        border:1px solid #00FFFF;
-                                                                    }
-
-                                                QPushButton:pressed {
-                                                                        background-color:none;
-                                                                        color:#00FFFF;
-                                                                    }
-                                            )";
-                                        }
-
-    static QString DropOverlayLabelStyle() {
-                                return
-                                R"(
-                                        QLabel {
-                                                    color:white;
-                                                    font-size:32px;
-                                                    font-weight:bold;
-                                                }
-                                    )";
-                            }
-    
-    static QString dragOverlayStyle() {
-                                            return 
-                                            R"(
-                                                    QFrame {
-                                                                background-color: rgba(0,0,0,180);
-                                                                border: 3px dashed #00FFFF;
-                                                            }
-                                                )";
-                                        }
-};
-
 
 class SVGStudioMessages {
 public:
