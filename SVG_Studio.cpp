@@ -355,6 +355,17 @@ public:
                                                                             "Please select a folder."
                                                                         );
                                                 }
+
+    static QMessageBox* FileAlreadyExists(QWidget *parent) {
+                                                                QMessageBox *msg;
+                                                                msg = new QMessageBox(parent);
+                                                                msg->setWindowTitle("File Already Exists");
+                                                                msg->setText("SVG file already exists.");
+                                                                msg->addButton("Create Anyway",QMessageBox::AcceptRole);
+                                                                msg->addButton("Overwrite",QMessageBox::DestructiveRole);
+                                                                msg->addButton("Cancel",QMessageBox::RejectRole);
+                                                                return msg;
+                                                            }
 };
 
 class SVGStudioEditorTab : public QWidget {
@@ -459,31 +470,32 @@ public:
                                                                                                         dialog.setWindowTitle("New SVG File");
                                                                                                         dialog.resize(320,290);
 
-                                                                                                        // QLabel *titleLabel;
+                                                                                                        // Label - New File Label
                                                                                                         titleLabel = new QLabel("New File");
 
-                                                                                                        // QLineEdit *fileNameEdit;
+                                                                                                        // Input - New File Input
                                                                                                         fileNameEdit = new QLineEdit;
                                                                                                         fileNameEdit->setPlaceholderText("Logo");
 
-                                                                                                        // QLineEdit *pathEdit;
+                                                                                                        // Input - Path Input
                                                                                                         pathEdit = new QLineEdit;
 
-                                                                                                        // QPushButton *browseButton;
+                                                                                                        // Buutton - Browse Button
                                                                                                         browseButton = new QPushButton("Browse");
                                                                                                         browseButton->setCursor(Qt::PointingHandCursor);
                                                                                                         browseButton->setToolTip("Browse PathcreateSave ifle");
                                                                                                         
-                                                                                                        // QPushButton *createButton;
+                                                                                                        // Button - create Button
                                                                                                         createButton = new QPushButton("Create");
                                                                                                         createButton->setCursor(Qt::PointingHandCursor);
                                                                                                         createButton->setToolTip("create New SVG File");
                                                                                                     
-                                                                                                        // QPushButton *cancelButton;
+                                                                                                        // Button - cancel Button
                                                                                                         cancelButton = new QPushButton("Cancel");
                                                                                                         cancelButton->setCursor(Qt::PointingHandCursor);
                                                                                                         cancelButton->setToolTip("Cancel");
 
+                                                                                                        // Group - bOXof Recommendation Paths
                                                                                                         pathGroup = new QButtonGroup(&dialog);
                                                                                                         quickPathsGroup = new QGroupBox("Quick Access Paths");
                                                                                                     };
@@ -500,10 +512,6 @@ public:
                                                                                                                                         radio = new QRadioButton(path);
                                                                                                                                         pathGroup->addButton(radio);
                                                                                                                                         quickPathsLayout->addWidget(radio);
-                                                                                                                                        // if(pathGroup->buttons().count() == 1) {
-                                                                                                                                        //                                             radio->setChecked(true);
-                                                                                                                                        //                                             pathEdit->setText(path);
-                                                                                                                                        //                                         }
                                                                                                                                         QObject::connect(radio,&QRadioButton::toggled,[radio, path, pathEdit]() {
                                                                                                                                                                                                                     if(radio->isChecked()) {
                                                                                                                                                                                                                                                 pathEdit->setText(path);
@@ -555,8 +563,44 @@ public:
                                                                                                                     );
 
                                                                                                             QObject::connect(createButton,&QPushButton::clicked,[&]() {
-                                                                                                                                                                        QString fileName = fileNameEdit->text().trimmed();
-                                                                                                                                                                        QString folderPath = pathEdit->text().trimmed();
+                                                                                                                                                                        QString fileName;
+                                                                                                                                                                        fileName = fileNameEdit->text().trimmed();
+                                                                                                                                                                        QString folderPath;
+                                                                                                                                                                        folderPath = pathEdit->text().trimmed();
+                                                                                                                                                                        QString fullPath;
+                                                                                                                                                                        fullPath = QDir(folderPath).filePath(fileName + ".svg");
+                                                                                                                                                                        if (QFile::exists(fullPath)) {
+                                                                                                                                                                                                        QMessageBox *msg;
+                                                                                                                                                                                                        msg = SVGStudioMessages::FileAlreadyExists(parent);
+                                                                                                                                                                                                        msg->exec();
+
+                                                                                                                                                                                                        QString clickedButton;
+                                                                                                                                                                                                        clickedButton = msg->clickedButton()->text();
+                                                                                                                                                                                                        if (clickedButton == "Cancel") {
+                                                                                                                                                                                                                                            delete msg;
+                                                                                                                                                                                                                                            return;
+                                                                                                                                                                                                                                        }
+
+                                                                                                                                                                                                        if (clickedButton == "Create Anyway") {
+                                                                                                                                                                                                                                                int counter;
+                                                                                                                                                                                                                                                counter = 1;
+                                                                                                                                                                                                                                                QString newPath;
+                                                                                                                                                                                                                                                do {
+                                                                                                                                                                                                                                                        newPath = QDir(folderPath).filePath(
+                                                                                                                                                                                                                                                                                                QString("%1 (%2).svg")
+                                                                                                                                                                                                                                                                                                .arg(fileName)
+                                                                                                                                                                                                                                                                                                .arg(counter)
+                                                                                                                                                                                                                                                                                            );
+
+                                                                                                                                                                                                                                                        counter++;
+
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                while(QFile::exists(newPath));
+                                                                                                                                                                                                                                                fullPath = newPath;
+                                                                                                                                                                                                                                            }
+
+                                                                                                                                                                                                        delete msg;
+                                                                                                                                                                                                    }
                                                                                                                                                                         if (fileName.isEmpty()) {
                                                                                                                                                                                                         SVGStudioMessages::EmptyFileName(parent);
                                                                                                                                                                                                         return;
@@ -565,7 +609,11 @@ public:
                                                                                                                                                                                                             SVGStudioMessages::EmptyFolderPath(parent);
                                                                                                                                                                                                             return;
                                                                                                                                                                                                         }
-                                                                                                                                                                            QString fullPath = QDir(folderPath).filePath(fileName + ".svg");
+
+                                                                                                                                                                            if (QFile::exists(fullPath)) {
+
+                                                                                                                                                                            }
+                                                                                                                                                                            // fullPath = QDir(folderPath).filePath(fileName + ".svg");
                                                                                                                                                                             QFile file(fullPath);
                                                                                                                                                                             if (file.open(QIODevice::WriteOnly)) {
                                                                                                                                                                                                                     file.write(
@@ -590,10 +638,20 @@ public:
                                                                                                                                                                                                                                 );
                                                                                                                                                                                                                     file.close();
                                                                                                                                                                                                                 }
+                                                                                                                                                                            for(int i = 0; i < tabWidget->count(); i++) {
+                                                                                                                                                                                                                            if(tabWidget->tabToolTip(i) == fullPath) {
+                                                                                                                                                                                                                                                                        QWidget *tab;
+                                                                                                                                                                                                                                                                        tab = tabWidget->widget(i);
+                                                                                                                                                                                                                                                                        tabWidget->removeTab(i);
+                                                                                                                                                                                                                                                                        delete tab;
+                                                                                                                                                                                                                                                                        break;
+                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                        }
                                                                                                                                                                             SVGStudioEditorTab *editorTab;
                                                                                                                                                                             editorTab = new SVGStudioEditorTab;
                                                                                                                                                                             editorTab->getPreview()->load(fullPath);
                                                                                                                                                                             tabWidget->addTab(editorTab,QFileInfo(fullPath).fileName());
+                                                                                                                                                                            tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),fullPath);
                                                                                                                                                                             QFile readFile(fullPath);
                                                                                                                                                                             if(readFile.open(QIODevice::ReadOnly)) {
                                                                                                                                                                                                                         editorTab->getEditor()->setPlainText(readFile.readAll());
