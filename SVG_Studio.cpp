@@ -469,7 +469,7 @@ public:
                                                                                                         cancelButton->setToolTip("Cancel");
 
                                                                                                         pathGroup = new QButtonGroup(&dialog);
-                                                                                                        quickPathsGroup = new QGroupBox("Quick Paths");
+                                                                                                        quickPathsGroup = new QGroupBox("Quick Access Paths");
                                                                                                     };
 
                                                                         auto CreateLayouts = [&]() {
@@ -489,10 +489,10 @@ public:
                                                                                                                                                                                     pathEdit->setText(path);
                                                                                                                                                                                 }
                                                                                                                                         QObject::connect(radio,&QRadioButton::toggled,[radio, path, pathEdit]() {
-                                                                                                                                                                                        if(radio->isChecked()) {
-                                                                                                                                                                                                                    pathEdit->setText(path);
+                                                                                                                                                                                                                    if(radio->isChecked()) {
+                                                                                                                                                                                                                                                pathEdit->setText(path);
+                                                                                                                                                                                                                                            }
                                                                                                                                                                                                                 }
-                                                                                                                                                                                    }
                                                                                                                                                 );
 
                                                                                                                                     }
