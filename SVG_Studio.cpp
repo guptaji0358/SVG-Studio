@@ -49,6 +49,8 @@ Project - SVG Studio
 #include<QJsonObject>
 #include<QJsonArray>
 #include<QFile>
+#include<QPropertyAnimation>
+#include<QFrame>
 
 // Paths Collection class
 class FilePaths {
@@ -82,6 +84,8 @@ public:
                                         if(file.open(QIODevice::WriteOnly)) {
                                                                                 QJsonObject root;
                                                                                 root["saved_paths"] = QJsonArray();
+                                                                                root["recent_files"] = QJsonArray();
+                                                                                root["recent_history_enabled"] = false;
                                                                                 file.write(QJsonDocument(root).toJson());
                                                                                 file.close();
                                                                             }
@@ -147,8 +151,90 @@ public:
                                             data["saved_paths"] = newPaths;
                                             SaveData(data);
                                         }
+
+    static bool IsRecentHistoryEnabled() {
+                                            QJsonObject data = LoadData();
+                                            return data["recent_history_enabled"].toBool(false);
+                                        }
+
+    static void SetRecentHistoryEnabled(bool enabled) {
+                                                            QJsonObject data = LoadData();
+                                                            data["recent_history_enabled"] = enabled;
+                                                            SaveData(data);
+                                                        }
 };
 
+// Toogle ON/OFF
+class SVGStudioToggle : public QWidget {
+    Q_OBJECT
+
+private:
+    bool isOn;
+    QFrame *background;
+    QFrame *knob;
+    QPropertyAnimation *animation;
+
+public:
+    SVGStudioToggle(QWidget *parent = nullptr):QWidget(parent),isOn(false) {
+        setFixedSize(44,24);
+
+        background = new QFrame(this);
+        background->setGeometry(0,0,44,24);
+        background->setStyleSheet(
+                                    "background:#444444;"
+                                    "border-radius:12px;"
+                                );
+
+        knob = new QFrame(this);
+        knob->setGeometry(2,2,20,20);
+        knob->setStyleSheet(
+                                "background:white;"
+                                "border-radius:10px;"
+                            );
+
+        animation = new QPropertyAnimation(knob,"pos",this);
+        animation->setDuration(150);
+    }
+
+    bool IsChecked() const {
+                                return isOn;
+                            }
+
+    void SetChecked(bool checked) {
+                                        isOn = checked;
+                                        animation->stop();
+                                        if(isOn) {
+                                                    background->setStyleSheet(
+                                                                                "background:#2ECC71;"
+                                                                                "border-radius:12px;"
+                                                                            );
+
+                                                    animation->setStartValue(knob->pos());
+                                                    animation->setEndValue(QPoint(22,2));
+                                                }
+                                        else {
+                                                    background->setStyleSheet(
+                                                                                "background:#444444;"
+                                                                                "border-radius:12px;"
+                                                                            );
+
+                                                    animation->setStartValue(knob->pos());
+                                                    animation->setEndValue(QPoint(2,2));
+                                                }
+
+                                        animation->start();
+                                        emit toggled(isOn);
+                                    }
+
+signals:
+    void toggled(bool checked);
+
+protected:
+    void mousePressEvent(QMouseEvent *event) override {
+                                                            SetChecked(!isOn);
+                                                            QWidget::mousePressEvent(event);
+                                                        }
+};
 
 class SVGStudioShortcutEditDialog : public QDialog {
 private:
@@ -750,6 +836,8 @@ private:
     QWidget *customizeTab;
     QPushButton *addPathButton;
     QPushButton *removePathButton;
+    QLabel *recentHistoryLabel;
+    SVGStudioToggle *recentHistoryToggle;
     QVBoxLayout *savedPathsLayout;
     QButtonGroup *pathGroup;
 
@@ -857,6 +945,13 @@ public:
                                     QLabel *savedPathsLabel;
                                     savedPathsLabel = new QLabel("Saved Paths");
 
+                                    recentHistoryLabel = new QLabel("Collect Recent History");
+
+                                    recentHistoryToggle = new SVGStudioToggle;
+                                    recentHistoryToggle->SetChecked(
+                                                                        SVGStudioDataManager::IsRecentHistoryEnabled()
+                                                                    );
+
                                     addPathButton = new QPushButton("Add Path");
                                     addPathButton->setToolTip("Add Paths");
                                     addPathButton->setCursor(Qt::PointingHandCursor);
@@ -869,8 +964,16 @@ public:
                                     layout->addLayout(savedPathsLayout);
                                     layout->addWidget(addPathButton);
                                     layout->addWidget(removePathButton);
+
+                                    // 20 px Between Saved Path Section - Recents Toggle
+                                    layout->addSpacing(20);
+
+                                    // Layout - Add Layout (Collect Recents History + Toggle)
+                                    layout->addWidget(recentHistoryLabel);
+                                    layout->addWidget(recentHistoryToggle);
                                     layout->addStretch();
 
+                                    // Apply Layout
                                     customizeTab->setLayout(layout);
                                     settingsTabs->addTab(customizeTab,"Customize");
                                 }
@@ -1004,6 +1107,11 @@ public:
                                                                                             delete selectedButton;
                                                                                         }
                                 );
+
+                            connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[](bool checked) {
+                                                                                                            SVGStudioDataManager::SetRecentHistoryEnabled(checked);
+                                                                                                        }
+                                    );
                         }
 
     void openSettings() {
@@ -1739,4 +1847,4 @@ int main(int argc, char *argv[]) {
                                     return app.exec();
                                 }
 
-// 2760
+#include "SVG_Studio.moc"
