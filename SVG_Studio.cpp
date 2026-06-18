@@ -339,6 +339,22 @@ public:
                                                                                                             QMessageBox::Yes | QMessageBox::No
                                                                                                         );
                                                                         }
+
+    static void EmptyFileName(QWidget *parent) {
+                                                    QMessageBox::warning(
+                                                                            parent,
+                                                                            "Empty File Name",
+                                                                            "New File Input cannot be empty."
+                                                                        );
+                                                }
+
+    static void EmptyFolderPath(QWidget *parent) {
+                                                    QMessageBox::warning(
+                                                                            parent,
+                                                                            "Empty Folder Path",
+                                                                            "Please select a folder."
+                                                                        );
+                                                }
 };
 
 class SVGStudioEditorTab : public QWidget {
@@ -484,10 +500,10 @@ public:
                                                                                                                                         radio = new QRadioButton(path);
                                                                                                                                         pathGroup->addButton(radio);
                                                                                                                                         quickPathsLayout->addWidget(radio);
-                                                                                                                                        if(pathGroup->buttons().count() == 1) {
-                                                                                                                                                                                    radio->setChecked(true);
-                                                                                                                                                                                    pathEdit->setText(path);
-                                                                                                                                                                                }
+                                                                                                                                        // if(pathGroup->buttons().count() == 1) {
+                                                                                                                                        //                                             radio->setChecked(true);
+                                                                                                                                        //                                             pathEdit->setText(path);
+                                                                                                                                        //                                         }
                                                                                                                                         QObject::connect(radio,&QRadioButton::toggled,[radio, path, pathEdit]() {
                                                                                                                                                                                                                     if(radio->isChecked()) {
                                                                                                                                                                                                                                                 pathEdit->setText(path);
@@ -542,9 +558,11 @@ public:
                                                                                                                                                                         QString fileName = fileNameEdit->text().trimmed();
                                                                                                                                                                         QString folderPath = pathEdit->text().trimmed();
                                                                                                                                                                         if (fileName.isEmpty()) {
+                                                                                                                                                                                                        SVGStudioMessages::EmptyFileName(parent);
                                                                                                                                                                                                         return;
                                                                                                                                                                                                     }
                                                                                                                                                                             if (folderPath.isEmpty()) {
+                                                                                                                                                                                                            SVGStudioMessages::EmptyFolderPath(parent);
                                                                                                                                                                                                             return;
                                                                                                                                                                                                         }
                                                                                                                                                                             QString fullPath = QDir(folderPath).filePath(fileName + ".svg");
@@ -580,6 +598,7 @@ public:
                                                                                                                                                                             if(readFile.open(QIODevice::ReadOnly)) {
                                                                                                                                                                                                                         editorTab->getEditor()->setPlainText(readFile.readAll());
                                                                                                                                                                                                                     }
+                                                                                                                                                                            readFile.close();
                                                                                                                                                                             tabWidget->setCurrentWidget(editorTab);
                                                                                                                                                                             dialog.accept();
                                                                                                                                                                         }
