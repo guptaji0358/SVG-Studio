@@ -450,6 +450,9 @@ public:
                                                                         QDialog dialog(parent);
 
                                                                         QLabel *titleLabel;
+                                                                        QLabel *fileNameLabel;
+                                                                        QLabel *locationLabel;
+                                                                        QLabel *svgLabel;
 
                                                                         QLineEdit *fileNameEdit;
                                                                         QLineEdit *pathEdit;
@@ -461,21 +464,34 @@ public:
                                                                         QButtonGroup *pathGroup;
 
                                                                         QVBoxLayout *mainLayout;
+                                                                        QHBoxLayout *nameLayout;
                                                                         QVBoxLayout *quickPathsLayout;
+                                                                        QHBoxLayout *buttonLayout;
+                                                                        QHBoxLayout *locationLayout;
 
                                                                         QGroupBox *quickPathsGroup;
 
                                                                         auto CreateWidgets = [&]() {
                                                                                                         // Create Dialog Box
                                                                                                         dialog.setWindowTitle("New SVG File");
-                                                                                                        dialog.resize(320,290);
+                                                                                                        dialog.resize(550,320);
 
                                                                                                         // Label - New File Label
-                                                                                                        titleLabel = new QLabel("New File");
+                                                                                                        titleLabel = new QLabel("New SVG File");
+
+                                                                                                        // Label - New File Name Label
+                                                                                                        fileNameLabel = new QLabel("File Name");
+
+                                                                                                        // Label - Location Label
+                                                                                                        locationLabel = new QLabel("Location");
+
+                                                                                                        // Label - .svg label
+                                                                                                        svgLabel = new QLabel(".svg");
 
                                                                                                         // Input - New File Input
                                                                                                         fileNameEdit = new QLineEdit;
                                                                                                         fileNameEdit->setPlaceholderText("Logo");
+                                                                                                        fileNameEdit->setFocus();
 
                                                                                                         // Input - Path Input
                                                                                                         pathEdit = new QLineEdit;
@@ -483,8 +499,8 @@ public:
                                                                                                         // Buutton - Browse Button
                                                                                                         browseButton = new QPushButton("Browse");
                                                                                                         browseButton->setCursor(Qt::PointingHandCursor);
-                                                                                                        browseButton->setToolTip("Browse PathcreateSave ifle");
-                                                                                                        
+                                                                                                        browseButton->setToolTip("Browse Path to CreateSave ifle");
+
                                                                                                         // Button - create Button
                                                                                                         createButton = new QPushButton("Create");
                                                                                                         createButton->setCursor(Qt::PointingHandCursor);
@@ -506,10 +522,11 @@ public:
 
                                                                                                         QStringList paths;
                                                                                                         paths = SVGStudioDataManager::GetPaths();
-                                                                                                        // QButtonGroup *pathGroup;
                                                                                                         for(QString path : paths) {
                                                                                                                                         QRadioButton *radio;
                                                                                                                                         radio = new QRadioButton(path);
+                                                                                                                                        radio->setCursor(Qt::PointingHandCursor);
+                                                                                                                                        radio->setToolTip(path);
                                                                                                                                         pathGroup->addButton(radio);
                                                                                                                                         quickPathsLayout->addWidget(radio);
                                                                                                                                         QObject::connect(radio,&QRadioButton::toggled,[radio, path, pathEdit]() {
@@ -522,18 +539,38 @@ public:
                                                                                                                                     }
 
                                                                                                         quickPathsGroup->setLayout(quickPathsLayout);
-                                                                                                        mainLayout->addWidget(titleLabel);
-                                                                                                        mainLayout->addWidget(fileNameEdit);
-                                                                                                        mainLayout->addWidget(pathEdit);
-                                                                                                        mainLayout->addWidget(browseButton);
-                                                                                                        mainLayout->addWidget(quickPathsGroup);
 
-                                                                                                        QHBoxLayout *buttonLayout;
+                                                                                                        mainLayout->addWidget(titleLabel);
+                                                                                                        mainLayout->addWidget(fileNameLabel);
+
+                                                                                                        // Layout - New File Name Layout (New File Label + New File Input + .svg Label)
+                                                                                                        nameLayout = new QHBoxLayout;
+                                                                                                        nameLayout->addWidget(fileNameEdit);
+                                                                                                        nameLayout->addWidget(svgLabel);
+                                                                                                        mainLayout->addLayout(nameLayout);
+
+                                                                                                        // 10 px Spacing Between File Name Layout and Location Layout
+                                                                                                        mainLayout->addSpacing(10);
+
+                                                                                                        // Layout - Location Layout (Location Label + Location Input + Browse Button)
+                                                                                                        mainLayout->addWidget(locationLabel);
+                                                                                                        locationLayout = new QHBoxLayout;
+                                                                                                        locationLayout->addWidget(pathEdit);
+                                                                                                        locationLayout->addWidget(browseButton);
+                                                                                                        mainLayout->addLayout(locationLayout);
+
+                                                                                                        // Button Layout
                                                                                                         buttonLayout = new QHBoxLayout;
                                                                                                         buttonLayout->addStretch();
                                                                                                         buttonLayout->addWidget(cancelButton);
                                                                                                         buttonLayout->addWidget(createButton);
 
+                                                                                                        // Quick Access Paths Layout (Quck Access Group + Raddio Buttons of Paths)
+                                                                                                        mainLayout->addWidget(quickPathsGroup);
+                                                                                                        mainLayout->addStretch();
+                                                                                                        mainLayout->addLayout(buttonLayout);
+
+                                                                                                        // Apply Layout
                                                                                                         mainLayout->addLayout(buttonLayout);
                                                                                                         dialog.setLayout(mainLayout);
                                                                                                     };
