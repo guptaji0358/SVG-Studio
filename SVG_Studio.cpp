@@ -439,8 +439,9 @@ public:
                                                                         QGroupBox *quickPathsGroup;
 
                                                                         auto CreateWidgets = [&]() {
-                                                                                                        // QDialog dialog;
+                                                                                                        // Create Dialog Box
                                                                                                         dialog.setWindowTitle("New SVG File");
+                                                                                                        dialog.resize(320,290);
 
                                                                                                         // QLabel *titleLabel;
                                                                                                         titleLabel = new QLabel("New File");
@@ -487,7 +488,7 @@ public:
                                                                                                                                                                                     radio->setChecked(true);
                                                                                                                                                                                     pathEdit->setText(path);
                                                                                                                                                                                 }
-                                                                                                                                        QObject::connect(radio,&QRadioButton::toggled,[&]() {
+                                                                                                                                        QObject::connect(radio,&QRadioButton::toggled,[radio, path, pathEdit]() {
                                                                                                                                                                                         if(radio->isChecked()) {
                                                                                                                                                                                                                     pathEdit->setText(path);
                                                                                                                                                                                                                 }
@@ -515,16 +516,21 @@ public:
 
                                                                         auto CreateConnections = [&]() {
                                                                                                         QObject::connect(browseButton,&QPushButton::clicked,[&]() {
-                                                                                                                                                                QString path;
-                                                                                                                                                                path = QFileDialog::getExistingDirectory(
-                                                                                                                                                                                                            parent,
-                                                                                                                                                                                                            "Select Folder"
-                                                                                                                                                                                                        );
+                                                                                                                                                                        QString path;
+                                                                                                                                                                        path = QFileDialog::getExistingDirectory(
+                                                                                                                                                                                                                    parent,
+                                                                                                                                                                                                                    "Select Folder"
+                                                                                                                                                                                                                );
 
-                                                                                                                                                                if(!path.isEmpty()) {
-                                                                                                                                                                                        pathEdit->setText(path);
-                                                                                                                                                                                    }
-                                                                                                                                                            }
+                                                                                                                                                                        if(!path.isEmpty()) {
+                                                                                                                                                                                                pathGroup->setExclusive(false);
+                                                                                                                                                                                                for (auto button:pathGroup->buttons()) {
+                                                                                                                                                                                                                                            button->setChecked(false);
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                pathGroup->setExclusive(true);
+                                                                                                                                                                                                pathEdit->setText(path);
+                                                                                                                                                                                            }
+                                                                                                                                                                    }
                                                                                                                     );
 
                                                                                                             QObject::connect(cancelButton,&QPushButton::clicked,[&]() {
