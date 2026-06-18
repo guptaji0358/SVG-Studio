@@ -838,6 +838,7 @@ private:
     QPushButton *removePathButton;
     QLabel *recentHistoryLabel;
     SVGStudioToggle *recentHistoryToggle;
+    QLabel *recentHistoryStatusLabel;
     QVBoxLayout *savedPathsLayout;
     QButtonGroup *pathGroup;
 
@@ -928,8 +929,11 @@ public:
     void CreateCustomiseTab() {
                                     customizeTab = new QWidget;
                                     QVBoxLayout *layout;
+                                    QHBoxLayout *recentHistoryLayout;
+
                                     layout = new QVBoxLayout;
                                     savedPathsLayout = new QVBoxLayout;
+                                    recentHistoryLayout = new QHBoxLayout;
 
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
@@ -946,11 +950,17 @@ public:
                                     savedPathsLabel = new QLabel("Saved Paths");
 
                                     recentHistoryLabel = new QLabel("Collect Recent History");
-
+                                    recentHistoryStatusLabel = new QLabel;
                                     recentHistoryToggle = new SVGStudioToggle;
                                     recentHistoryToggle->SetChecked(
                                                                         SVGStudioDataManager::IsRecentHistoryEnabled()
                                                                     );
+                                    if(recentHistoryToggle->IsChecked()) {
+                                                                                recentHistoryStatusLabel->setText("Disable Recent History Collectable");
+                                                                            }
+                                    else {
+                                                recentHistoryStatusLabel->setText("Enable Recent History Collectable");
+                                            }
 
                                     addPathButton = new QPushButton("Add Path");
                                     addPathButton->setToolTip("Add Paths");
@@ -969,8 +979,11 @@ public:
                                     layout->addSpacing(20);
 
                                     // Layout - Add Layout (Collect Recents History + Toggle)
+                                    recentHistoryLayout->addWidget(recentHistoryStatusLabel);
+                                    recentHistoryLayout->addStretch();
+                                    recentHistoryLayout->addWidget(recentHistoryToggle);
                                     layout->addWidget(recentHistoryLabel);
-                                    layout->addWidget(recentHistoryToggle);
+                                    layout->addLayout(recentHistoryLayout);
                                     layout->addStretch();
 
                                     // Apply Layout
@@ -1108,8 +1121,14 @@ public:
                                                                                         }
                                 );
 
-                            connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[](bool checked) {
+                            connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
                                                                                                             SVGStudioDataManager::SetRecentHistoryEnabled(checked);
+                                                                                                            if(checked) {
+                                                                                                                            recentHistoryStatusLabel->setText("Disable Recent History collectable");
+                                                                                                                        }
+                                                                                                            else {
+                                                                                                                    recentHistoryStatusLabel->setText("Enable Recent History Collectable");
+                                                                                                                }
                                                                                                         }
                                     );
                         }
