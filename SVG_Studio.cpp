@@ -146,6 +146,33 @@ public:
                                                                 }
                                                 )";
                                     }
+
+    static QString PathCardStyle() {
+                                        return R"(
+                                                    QFrame{
+                                                                background:#1E1E1E;
+                                                                border:1px solid #333333;
+                                                                border-radius:8px;
+                                                            }
+                                                )";
+                                    }
+
+    static QString RemovePathButtonStyle() {
+                                                return R"(
+                                                            QPushButton{
+                                                                            border:none;
+                                                                            background:transparent;
+                                                                        }
+
+                                                            QPushButton:hover{
+                                                                                background:#2A2A2A;
+                                                                            }
+
+                                                            QPushButton:pressed{
+                                                                                    background:#551111;
+                                                                                }
+                                                        )";
+                                            }
 };
 
 class SVGStudioDataManager {
@@ -461,6 +488,15 @@ public:
                                                                 msg->addButton("Cancel",QMessageBox::RejectRole);
                                                                 return msg;
                                                             }
+
+    static QMessageBox::StandardButton ConfirmRemovePath( QWidget *parent,QString path) {
+                                                                                            return QMessageBox::question(
+                                                                                                                            parent,
+                                                                                                                            "Remove Path",
+                                                                                                                            QString("Do You Really want to Remove\n%1 ?").arg(path),
+                                                                                                                            QMessageBox::Yes | QMessageBox::No
+                                                                                                                        );
+                                                                                        }
 };
 
 class SVGStudioEditorTab : public QWidget {
@@ -961,15 +997,8 @@ public:
                                                                         cardLayout = new QHBoxLayout;
 
                                                                         pathCard->setFrameShape(QFrame::NoFrame);
-                                                                        pathCard->setStyleSheet(
-                                                                                                    R"(
-                                                                                                        QFrame{
-                                                                                                                    background:#1E1E1E;
-                                                                                                                    border:1px solid #333333;
-                                                                                                                    border-radius:8px;
-                                                                                                                }
-                                                                                                    )"
-                                                                                                );
+                                                                        pathCard->setStyleSheet(Style::PathCardStyle());
+
                                                                         QPushButton *removeButton;
                                                                         removeButton = new QPushButton;
                                                                         removeButton->setIcon(QIcon(FilePaths::RemoveButtonIconPath));
@@ -977,22 +1006,7 @@ public:
                                                                         removeButton->setFixedSize(28,28);
                                                                         removeButton->setCursor(Qt::PointingHandCursor);
                                                                         removeButton->setToolTip("Remove Path");
-                                                                        removeButton->setStyleSheet(
-                                                                                                        R"(
-                                                                                                        QPushButton{
-                                                                                                                        border:none;
-                                                                                                                        background:transparent;
-                                                                                                                    }
-
-                                                                                                        QPushButton:hover{
-                                                                                                                            background:#2A2A2A;
-                                                                                                                        }
-
-                                                                                                        QPushButton:pressed{
-                                                                                                                                background:#551111;
-                                                                                                                            }
-                                                                                                        )"
-                                                                                                    );
+                                                                        removeButton->setStyleSheet(Style::RemovePathButtonStyle());
 
                                                                         cardLayout->addWidget(pathRadio);
                                                                         cardLayout->addStretch();
@@ -1002,13 +1016,10 @@ public:
                                                                         connect(removeButton,&QPushButton::clicked,this,[=]() {
                                                                                                                                     QMessageBox::StandardButton reply;
 
-                                                                                                                                    reply = QMessageBox::warning(
-                                                                                                                                                                    this,
-                                                                                                                                                                    "Remove Path",
-                                                                                                                                                                    QString("Remove\n%1 ?").arg(path),
-                                                                                                                                                                    QMessageBox::Yes |
-                                                                                                                                                                    QMessageBox::No
-                                                                                                                                                                );
+                                                                                                                                    reply = SVGStudioMessages::ConfirmRemovePath(
+                                                                                                                                                                                    this,
+                                                                                                                                                                                    path
+                                                                                                                                                                                );
 
                                                                                                                                     if(reply == QMessageBox::Yes) {
                                                                                                                                                                         SVGStudioDataManager::RemovePath(path);
