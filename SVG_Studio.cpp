@@ -172,6 +172,7 @@ public:
                                                                         }
 
                                                         QPushButton:pressed{
+                                                                                background:rgba(255,77,79,50);
                                                                                 color:#990000;
                                                                             }
                                                     )";
