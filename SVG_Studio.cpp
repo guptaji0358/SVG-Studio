@@ -98,7 +98,6 @@ public:
 
                                                 QPushButton:hover {
                                                                         background-color:none;
-                                                                        border:1px solid #00FFFF;
                                                                     }
 
                                                 QPushButton:pressed {
@@ -173,6 +172,26 @@ public:
                                                                                 }
                                                         )";
                                             }
+
+    static QString AddPathButtonStyle() {
+                                            return R"(
+                                                            QPushButton{
+                                                                background:none;
+                                                                border:nonw;
+                                                                border-radius:8px;
+                                                                padding:6px 14px;
+                                                                font-weight:bold;
+                                                            }
+
+                                                            QPushButton:hover{
+                                                                border:1px solid #00FFFF;
+                                                            }
+
+                                                            QPushButton:pressed{
+                                                                background:#303030;
+                                                            }
+                                                        )";
+                                        }
 };
 
 class SVGStudioDataManager {
@@ -880,12 +899,18 @@ private:
     QWidget *appearanceContainer;
     QWidget *customizeTab;
     QPushButton *addPathButton;
-    QPushButton *removePathButton;
     QLabel *recentHistoryLabel;
     SVGStudioToggle *recentHistoryToggle;
     QLabel *recentHistoryStatusLabel;
     QVBoxLayout *savedPathsLayout;
     QButtonGroup *pathGroup;
+    QHBoxLayout *addButtonLayout;
+    QFrame *pathCard;
+    QHBoxLayout *cardLayout;
+    QPushButton *removeButton;
+    QRadioButton *pathRadio;
+    QString pendingRemovePath;
+    QFrame* pendingRemoveCard;
 
 public:
     SVGStudioSettingsDialogLogic(QWidget *parent = nullptr):QDialog(parent) {
@@ -1014,20 +1039,29 @@ public:
                                                                         pathCard->setLayout(cardLayout);
                                                                         savedPathsLayout->addWidget(pathCard);
                                                                         connect(removeButton,&QPushButton::clicked,this,[=]() {
-                                                                                                                                    QMessageBox::StandardButton reply;
+                                                                                                                                    RemovePathCard(
+                                                                                                                                                        path,
+                                                                                                                                                        pathCard
+                                                                                                                                                    );
 
-                                                                                                                                    reply = SVGStudioMessages::ConfirmRemovePath(
-                                                                                                                                                                                    this,
-                                                                                                                                                                                    path
-                                                                                                                                                                                );
-
-                                                                                                                                    if(reply == QMessageBox::Yes) {
-                                                                                                                                                                        SVGStudioDataManager::RemovePath(path);
-                                                                                                                                                                        savedPathsLayout->removeWidget(pathCard);
-                                                                                                                                                                        delete pathCard;
-                                                                                                                                                                    }
                                                                                                                                 }
                                                                                 );
+
+                                                                        // connect(removeButton,&QPushButton::clicked,this,[=]() {
+                                                                        //                                                             QMessageBox::StandardButton reply;
+
+                                                                        //                                                             reply = SVGStudioMessages::ConfirmRemovePath(
+                                                                        //                                                                                                             this,
+                                                                        //                                                                                                             path
+                                                                        //                                                                                                         );
+
+                                                                        //                                                             if(reply == QMessageBox::Yes) {
+                                                                        //                                                                                                 SVGStudioDataManager::RemovePath(path);
+                                                                        //                                                                                                 savedPathsLayout->removeWidget(pathCard);
+                                                                        //                                                                                                 delete pathCard;
+                                                                        //                                                                                             }
+                                                                        //                                                         }
+                                                                        //         );
                                                                     }
 
                                     QLabel *savedPathsLabel;
@@ -1046,18 +1080,23 @@ public:
                                                 recentHistoryStatusLabel->setText("Enable Recent History Collectable");
                                             }
 
-                                    addPathButton = new QPushButton("Add Path");
-                                    addPathButton->setToolTip("Add Paths");
+                                    // Button - Add Path Button
+                                    addPathButton = new QPushButton("Add New Path");
+                                    addPathButton->setFixedWidth(120);
+                                    addPathButton->setFixedHeight(32);
+                                    addPathButton->setToolTip("Add New Paths");
                                     addPathButton->setCursor(Qt::PointingHandCursor);
+                                    addPathButton->setStyleSheet(Style::AddPathButtonStyle());
 
-                                    removePathButton = new QPushButton("Remove Path");
-                                    removePathButton->setToolTip("Remove Path");
-                                    removePathButton->setCursor(Qt::PointingHandCursor);
-                                    
                                     layout->addWidget(savedPathsLabel);
                                     layout->addLayout(savedPathsLayout);
-                                    layout->addWidget(addPathButton);
-                                    layout->addWidget(removePathButton);
+                                    // QHBoxLayout *addButtonLayout;
+                                    addButtonLayout = new QHBoxLayout;
+                                    addButtonLayout->addStretch();
+                                    addButtonLayout->addWidget(addPathButton);
+
+                                    layout->addLayout(addButtonLayout);
+                                    // layout->addWidget(addPathButton);
 
                                     // 20 px Between Saved Path Section - Recents Toggle
                                     layout->addSpacing(20);
@@ -1157,11 +1196,34 @@ public:
                                                                                                                                         return;
                                                                                                                                     }
                                                                                                                         }
-
-                                                                                                QRadioButton *pathRadio;
+                                                                                                pathCard = new QFrame;
+                                                                                                cardLayout = new QHBoxLayout;
                                                                                                 pathRadio = new QRadioButton(path);
+                                                                                                removeButton = new QPushButton;
+                                                                                                removeButton->setIcon(QIcon(FilePaths::RemoveButtonIconPath));
+                                                                                                removeButton->setFixedSize(28,28);
+                                                                                                removeButton->setIconSize(QSize(48,48));
+                                                                                                removeButton->setStyleSheet(Style::RemovePathButtonStyle());
+                                                                                                connect(removeButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                                        RemovePathCard(
+                                                                                                                                                                            path,
+                                                                                                                                                                            pathCard
+                                                                                                                                                                        );
+                                                                                                                                                        }
+                                                                                                        );
+
+                                                                                                pathCard->setStyleSheet(Style::PathCardStyle());
+
+                                                                                                cardLayout->addWidget(pathRadio);
+                                                                                                cardLayout->addStretch();
+                                                                                                cardLayout->addWidget(removeButton);
+
+                                                                                                pathCard->setLayout(cardLayout);
+
                                                                                                 pathGroup->addButton(pathRadio);
-                                                                                                savedPathsLayout->addWidget(pathRadio);
+
+                                                                                                savedPathsLayout->addWidget(pathCard);
+
                                                                                                 pathRadio->setChecked(true);
                                                                                                 SVGStudioDataManager::AddPath(path);
                                                                                                 SVGStudioMessages::Success(this);
@@ -1171,6 +1233,20 @@ public:
 
                                 dialog.exec();
                             }
+
+    void RemovePathCard(QString path,QFrame* pathCard) {
+                                                            QMessageBox::StandardButton reply;
+                                                            reply = SVGStudioMessages::ConfirmRemovePath(
+                                                                                                            this,
+                                                                                                            path
+                                                                                                        );
+
+                                                            if(reply == QMessageBox::Yes) {
+                                                                                                SVGStudioDataManager::RemovePath(path);
+                                                                                                savedPathsLayout->removeWidget(pathCard);
+                                                                                                delete pathCard;
+                                                                                            }
+                                                        }
 
     void connections() {
                             // Toggle Appearnce Dropdown
@@ -1190,20 +1266,6 @@ public:
                                                                                         ShowAddPathDialog();
                                                                                     }
                                     );
-
-                            // Remove Button Connection
-                            connect(removePathButton,&QPushButton::clicked,this,[=]() {
-                                                                                            QAbstractButton *selectedButton;
-                                                                                            selectedButton = pathGroup->checkedButton();
-                                                                                            if(selectedButton == nullptr) {
-                                                                                                                                return;
-                                                                                                                            }
-                                                                                            pathGroup->removeButton(selectedButton);
-                                                                                            savedPathsLayout->removeWidget(selectedButton);
-                                                                                            SVGStudioDataManager::RemovePath(selectedButton->text());
-                                                                                            delete selectedButton;
-                                                                                        }
-                                );
 
                             connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
                                                                                                             SVGStudioDataManager::SetRecentHistoryEnabled(checked);
