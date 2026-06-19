@@ -892,25 +892,29 @@ public:
 // Dynamic Hover Effect on card class
 class PathCardHoverFilter : public QObject {
 private:
+    QPushButton* editButton;
     QPushButton* removeButton;
 
 public:
     PathCardHoverFilter(
-                            QPushButton* button
+                            QPushButton* editBtn,
+                            QPushButton* removeBtn
                         )
-
                         {
-                            removeButton = button;
+                            editButton = editBtn;
+                            removeButton = removeBtn;
                         }
 
 protected:
     bool eventFilter(QObject* watched,QEvent* event) override {
                                                                     if(event->type() == QEvent::Enter) {
+                                                                                                            editButton->show();
                                                                                                             removeButton->show();
                                                                                                             removeButton->setIcon(QIcon(FilePaths::NormalRemoveButtonIconPath));
                                                                                                         }
 
                                                                     if(event->type() == QEvent::Leave) {
+                                                                                                            editButton->hide();
                                                                                                             removeButton->hide();
                                                                                                             removeButton->setIcon(QIcon(FilePaths::NormalRemoveButtonIconPath));
                                                                                                         }
@@ -968,6 +972,7 @@ private:
     QFrame *pathCard;
     QHBoxLayout *cardLayout;
     QPushButton *removeButton;
+    QPushButton *editButton;
     QRadioButton *pathRadio;
     QString pendingRemovePath;
     QFrame* pendingRemoveCard;
@@ -981,8 +986,7 @@ public:
                                 return line;
                             }
 
-void SetupRemoveButtonStates(QPushButton* removeButton)
-{
+void SetupRemoveButtonStates(QPushButton* removeButton) {
     connect(removeButton,&QPushButton::pressed,this,[=]() {
                                                                 removeButton->setIcon(QIcon(FilePaths::GlowRedRemoveButtonIconPath));
                                                         }
@@ -1130,11 +1134,24 @@ void SetupRemoveButtonStates(QPushButton* removeButton)
                                                                                                                                 }
                                                                                 );
 
+                                                                        // Edit Button 
+                                                                        editButton = new QPushButton;
+                                                                        editButton->setCursor(Qt::PointingHandCursor);
+                                                                        editButton->setToolTip("Edit Path");
+                                                                        editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
+                                                                        editButton->setText("Edit");
+                                                                        editButton->hide();
+
                                                                         cardLayout->addWidget(pathRadio);
                                                                         cardLayout->addStretch();
+                                                                        cardLayout->addWidget(editButton);
                                                                         cardLayout->addWidget(removeButton);
                                                                         pathCard->setLayout(cardLayout);
-                                                                        pathCard->installEventFilter( new PathCardHoverFilter(removeButton));
+                                                                        pathCard->installEventFilter(new PathCardHoverFilter(
+                                                                                                                                editButton,
+                                                                                                                                removeButton
+                                                                                                                            )
+                                                                                                    );
                                                                         savedPathsLayout->addWidget(pathCard);
                                                                     }
 
@@ -1298,15 +1315,28 @@ void SetupRemoveButtonStates(QPushButton* removeButton)
                                                                                                                                                         }
                                                                                                         );
 
+                                                                                                // Edit Button 
+                                                                                                editButton = new QPushButton;
+                                                                                                editButton->setCursor(Qt::PointingHandCursor);
+                                                                                                editButton->setToolTip("Edit Path");
+                                                                                                editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
+                                                                                                editButton->setText("Edit");
+                                                                                                editButton->hide();
+
                                                                                                 pathCard->setStyleSheet(Style::PathCardStyle());
 
                                                                                                 cardLayout->addWidget(pathRadio);
                                                                                                 cardLayout->addStretch();
+                                                                                                cardLayout->addWidget(editButton);
                                                                                                 cardLayout->addWidget(removeButton);
 
                                                                                                 pathCard->setLayout(cardLayout);
-                                                                                                pathCard->installEventFilter(new PathCardHoverFilter(removeButton));
-                                                                                                                        
+                                                                                                pathCard->installEventFilter(new PathCardHoverFilter(
+                                                                                                                                                        editButton,
+                                                                                                                                                        removeButton
+                                                                                                                                                    )
+                                                                                                                            );
+                                                                                                                            
                                                                                                 pathGroup->addButton(pathRadio);
                                                                                                 savedPathsLayout->addWidget(pathCard);
 
