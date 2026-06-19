@@ -27,6 +27,7 @@ qt_add_resources(SVGStudio app_resources
         1_SVG_DRAG_DROP_ANIMATION.gif
         2_SVG_DRAG_DROP_ANIMATION.gif
         3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif
+        REMOVE.svg
 )
 
 target_link_libraries(SVGStudio PRIVATE
