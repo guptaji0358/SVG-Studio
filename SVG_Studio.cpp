@@ -913,6 +913,14 @@ private:
     QFrame* pendingRemoveCard;
 
 public:
+    QFrame* CreateSeparator() {
+                                QFrame *line;
+                                line = new QFrame;
+                                line->setFrameShape(QFrame::HLine);
+                                line->setFrameShadow(QFrame::Sunken);
+                                return line;
+                            }
+                            
     SVGStudioSettingsDialogLogic(QWidget *parent = nullptr):QDialog(parent) {
                                                                                     settingsTabs = new QTabWidget;
                                                                                     CreateGeneralTab();
@@ -1046,22 +1054,6 @@ public:
 
                                                                                                                                 }
                                                                                 );
-
-                                                                        // connect(removeButton,&QPushButton::clicked,this,[=]() {
-                                                                        //                                                             QMessageBox::StandardButton reply;
-
-                                                                        //                                                             reply = SVGStudioMessages::ConfirmRemovePath(
-                                                                        //                                                                                                             this,
-                                                                        //                                                                                                             path
-                                                                        //                                                                                                         );
-
-                                                                        //                                                             if(reply == QMessageBox::Yes) {
-                                                                        //                                                                                                 SVGStudioDataManager::RemovePath(path);
-                                                                        //                                                                                                 savedPathsLayout->removeWidget(pathCard);
-                                                                        //                                                                                                 delete pathCard;
-                                                                        //                                                                                             }
-                                                                        //                                                         }
-                                                                        //         );
                                                                     }
 
                                     QLabel *savedPathsLabel;
@@ -1090,16 +1082,13 @@ public:
 
                                     layout->addWidget(savedPathsLabel);
                                     layout->addLayout(savedPathsLayout);
-                                    // QHBoxLayout *addButtonLayout;
+
+                                    // Layout - Add Button Layout
                                     addButtonLayout = new QHBoxLayout;
                                     addButtonLayout->addStretch();
                                     addButtonLayout->addWidget(addPathButton);
-
                                     layout->addLayout(addButtonLayout);
-                                    // layout->addWidget(addPathButton);
-
-                                    // 20 px Between Saved Path Section - Recents Toggle
-                                    layout->addSpacing(20);
+                                    layout->addWidget(CreateSeparator());
 
                                     // Layout - Add Layout (Collect Recents History + Toggle)
                                     recentHistoryLayout->addWidget(recentHistoryStatusLabel);
@@ -1107,6 +1096,7 @@ public:
                                     recentHistoryLayout->addWidget(recentHistoryToggle);
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryLayout);
+                                    layout->addWidget(CreateSeparator());
                                     layout->addStretch();
 
                                     // Apply Layout
@@ -1196,9 +1186,17 @@ public:
                                                                                                                                         return;
                                                                                                                                     }
                                                                                                                         }
+
+                                                                                                // Frame - Get Card (Radio Button with Path + Remove)
                                                                                                 pathCard = new QFrame;
                                                                                                 cardLayout = new QHBoxLayout;
+
+                                                                                                // RadioButton - Path Radio Button
                                                                                                 pathRadio = new QRadioButton(path);
+                                                                                                pathRadio->setCursor(Qt::PointingHandCursor);
+                                                                                                pathRadio->setToolTip(path);
+
+                                                                                                // Button - Remove Button
                                                                                                 removeButton = new QPushButton;
                                                                                                 removeButton->setIcon(QIcon(FilePaths::RemoveButtonIconPath));
                                                                                                 removeButton->setFixedSize(28,28);
