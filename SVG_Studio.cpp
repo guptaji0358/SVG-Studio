@@ -1047,6 +1047,12 @@ private:
     QPushButton *priviewButton;
     QHBoxLayout *buttonRow;
     QHBoxLayout *iconToggleLayout;
+    QPushButton *darkPreviewButton;
+    QPushButton *darkApplyButton;
+    QPushButton *lightPreviewButton;
+    QPushButton *lightApplyButton;
+    QPushButton *systemPreviewButton;
+    QPushButton *systemApplyButton;
 
 public:
     QFrame* CreateSeparator() {
@@ -1264,12 +1270,12 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     QLabel *darkLabel =new QLabel("Apply Light Mode SVG File Icon");
 
                                     // Button - Priview Button
-                                    QPushButton *darkPreviewButton = new QPushButton("Preview");
+                                    darkPreviewButton = new QPushButton("Preview");
                                     darkPreviewButton->setToolTip("Priview of File Icon");
                                     darkPreviewButton->setCursor(Qt::PointingHandCursor);
 
                                     // Button - Apply Button
-                                    QPushButton *darkApplyButton = new QPushButton("Apply");
+                                    darkApplyButton = new QPushButton("Apply");
                                     darkApplyButton->setCursor(Qt::PointingHandCursor);
                                     darkApplyButton->setToolTip("Apply File Icon");
 
@@ -1298,12 +1304,12 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     QLabel *lightLabel = new QLabel("Apply Light Mode SVG File Icon");
 
                                     // Button - Priview Button
-                                    QPushButton *lightPreviewButton = new QPushButton("Preview");
+                                    lightPreviewButton = new QPushButton("Preview");
                                     lightPreviewButton->setToolTip("Priview of File Icon");
                                     lightPreviewButton->setCursor(Qt::PointingHandCursor);
 
                                     // Button - Apply Button
-                                    QPushButton *lightApplyButton = new QPushButton("Apply");
+                                    lightApplyButton = new QPushButton("Apply");
                                     lightApplyButton->setCursor(Qt::PointingHandCursor);
                                     lightApplyButton->setToolTip("Apply File Icon");
 
@@ -1332,12 +1338,12 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     QLabel *systemLabel =new QLabel("Apply System Mode SVG File Icon");
 
                                     // Button - Priview Button
-                                    QPushButton *systemPreviewButton = new QPushButton("Preview");
+                                    systemPreviewButton = new QPushButton("Preview");
                                     systemPreviewButton->setToolTip("Priview of Both File Icon(s)");
                                     systemPreviewButton->setCursor(Qt::PointingHandCursor);
 
                                     // Button - Apply Button
-                                    QPushButton *systemApplyButton = new QPushButton("Apply");
+                                    systemApplyButton = new QPushButton("Apply");
                                     systemApplyButton->setCursor(Qt::PointingHandCursor);
                                     systemApplyButton->setToolTip("Apply File Icon");
 
@@ -1356,6 +1362,17 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                             )
                                                                                         );
 
+                                                                                    
+                                    // Make Button Diable  while toggle off
+                                    bool enabled;
+                                    enabled = SVGStudioDataManager::IsSvgFileIconsEnabled();
+                                    svgFileIconsToggle->SetChecked(enabled);
+                                    darkPreviewButton->setEnabled(enabled);
+                                    darkApplyButton->setEnabled(enabled);
+                                    lightPreviewButton->setEnabled(enabled);
+                                    lightApplyButton->setEnabled(enabled);
+                                    systemPreviewButton->setEnabled(enabled);
+                                    systemApplyButton->setEnabled(enabled);
 
                                     layout->addWidget(savedPathsLabel);
                                     layout->addLayout(savedPathsLayout);
@@ -1583,6 +1600,20 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                                 }
                                                                                                         }
                                     );
+
+                            // connect - Disable Button(s) while tohggle OFF
+                            connect(svgFileIconsToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
+                                                                                                            SVGStudioDataManager::SetSvgFileIconsEnabled(checked);
+                                                                                                            darkPreviewButton->setEnabled(checked);
+                                                                                                            darkApplyButton->setEnabled(checked);
+
+                                                                                                            lightPreviewButton->setEnabled(checked);
+                                                                                                            lightApplyButton->setEnabled(checked);
+
+                                                                                                            systemPreviewButton->setEnabled(checked);
+                                                                                                            systemApplyButton->setEnabled(checked);
+                                                                                                        }
+                                    );
                         }
 
     void openSettings() {
@@ -1710,7 +1741,6 @@ private:
                             }
 
 protected:
-
     // Result - Show the Drag And Drop Animation While file seems  Dropping and tells Drop Here
     void dragEnterEvent(QDragEnterEvent *event) override {
                                                             if(event->mimeData()->hasUrls()) {
