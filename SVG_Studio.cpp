@@ -1269,7 +1269,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     QHBoxLayout *darkLayout = new QHBoxLayout;
 
                                     // Label - Create Drak Mode SVG File Label
-                                    QLabel *darkLabel =new QLabel("Apply Light Mode SVG File Icon");
+                                    QLabel *darkLabel =new QLabel("Apply Dark Mode SVG File Icon");
 
                                     // Button - Priview Button
                                     darkPreviewButton = new QPushButton("Preview");
