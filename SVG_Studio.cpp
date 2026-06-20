@@ -68,6 +68,8 @@ public:
                     static inline const QString NormalRemoveButtonIconPath = ":/NORMAL_REMOVE.svg";
                     static inline const QString RedRemoveButtonIconPath = ":/RED_REMOVE.svg";
                     static inline const QString GlowRedRemoveButtonIconPath = ":/GLOW_RED_REMOVE.svg";
+                    static inline const QString DarkModeSvgFileIconPath = ":/DARK_MODE_SVG_FILE_ICON.svg";
+                    static inline const QString LightModeSvgFileIconPath = ":/LIGHT_MODE_SVG_FILE_ICON.svg";
                     static inline const QString DataFileName ="SVGStudioData.json";
                 };
 
@@ -1410,6 +1412,33 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     settingsTabs->addTab(customizeTab,"Customize");
                                 }
 
+    // Show Preview Dialog for Dark and Light
+    void ShowIconPreview(QString svgPath) {
+                                                QDialog dialog(this);
+                                                dialog.setWindowTitle("SVG Icon Preview");
+                                                dialog.resize(400,400);
+                                                QVBoxLayout *layout = new QVBoxLayout;
+                                                QSvgWidget *preview = new QSvgWidget;
+                                                preview->load(svgPath);
+                                                layout->addWidget(preview);
+                                                dialog.setLayout(layout);
+                                                dialog.exec();
+                                            }
+
+    // Show Light + Dark File Icons side by side
+    void ShowSystemPreview() {
+                                QDialog dialog(this);
+                                QHBoxLayout *layout = new QHBoxLayout;
+                                QSvgWidget *dark = new QSvgWidget;
+                                dark->load(FilePaths::DarkModeSvgFileIconPath);
+                                QSvgWidget *light = new QSvgWidget;
+                                light->load(FilePaths::LightModeSvgFileIconPath);
+                                layout->addWidget(dark);
+                                layout->addWidget(light);
+                                dialog.setLayout(layout);
+                                dialog.exec();
+                            } 
+
     // Path Addition Window
     void ShowAddPathDialog() {
                                 QHBoxLayout *buttonLayout;
@@ -1614,6 +1643,20 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                             systemApplyButton->setEnabled(checked);
                                                                                                         }
                                     );
+
+                            connect(darkPreviewButton,&QPushButton::clicked,this,[=]() {
+                                                                                            ShowIconPreview(FilePaths::DarkModeSvgFileIconPath);
+                                                                                        }
+                                    );
+
+                            connect(lightPreviewButton,&QPushButton::clicked,this,[=]() {
+                                                                                            ShowIconPreview(FilePaths::LightModeSvgFileIconPath);
+                                                                                        }
+                                    );
+
+                            connect(systemPreviewButton,&QPushButton::clicked,this,[=]() {
+                                                                                                ShowSystemPreview();
+                                                                                            });
                         }
 
     void openSettings() {

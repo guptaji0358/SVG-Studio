@@ -30,6 +30,9 @@ qt_add_resources(SVGStudio app_resources
         NORMAL_REMOVE.svg
         RED_REMOVE.svg
         GLOW_RED_REMOVE.svg
+        DARK_MODE_SVG_FILE_ICON.svg
+        LIGHT_MODE_SVG_FILE_ICON.svg
+        LIGHT_MODE_SVG_FILE_ICON.svg
 )
 
 target_link_libraries(SVGStudio PRIVATE
