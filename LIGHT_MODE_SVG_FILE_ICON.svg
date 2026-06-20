@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 256 256">
+
+    <defs>
+
+        <linearGradient id="docGrad"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%">
+            <stop offset="0%" stop-color="#FFFFFF"/>
+            <stop offset="100%" stop-color="#F5F8FC"/>
+        </linearGradient>
+
+        <linearGradient id="borderGrad"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%">
+            <stop offset="0%" stop-color="#4FC3F7"/>
+            <stop offset="50%" stop-color="#42A5F5"/>
+            <stop offset="100%" stop-color="#AB47BC"/>
+        </linearGradient>
+
+    </defs>
+
+    <!-- Document -->
+
+    <path d="M56 20
+             H156
+             L212 76
+             V214
+             C212 224 204 232 194 232
+             H56
+             C46 232 38 224 38 214
+             V38
+             C38 28 46 20 56 20 Z"
+          fill="url(#docGrad)"
+          stroke="url(#borderGrad)"
+          stroke-width="4"/>
+
+    <!-- Fold -->
+
+    <path d="M156 20
+             V76
+             H212"
+          fill="none"
+          stroke="#C7D5EA"
+          stroke-width="4"/>
+
+    <!-- Reflection -->
+
+    <path d="M70 42
+             C100 30 145 30 180 45"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="8"
+          stroke-linecap="round"
+          opacity="0.9"/>
+
+    <!-- SVG Curve -->
+
+    <path d="M82 145
+             C108 95
+             142 95
+             170 142"
+          fill="none"
+          stroke="url(#borderGrad)"
+          stroke-width="10"
+          stroke-linecap="round"/>
+
+    <!-- Handles -->
+
+    <line x1="82"
+          y1="145"
+          x2="108"
+          y2="95"
+          stroke="#6A7788"
+          stroke-width="2"/>
+
+    <line x1="170"
+          y1="142"
+          x2="142"
+          y2="95"
+          stroke="#6A7788"
+          stroke-width="2"/>
+
+    <!-- Nodes -->
+
+    <circle cx="82"
+            cy="145"
+            r="9"
+            fill="#4FC3F7"/>
+
+    <circle cx="108"
+            cy="95"
+            r="6"
+            fill="#FFFFFF"
+            stroke="#42A5F5"
+            stroke-width="2"/>
+
+    <circle cx="142"
+            cy="95"
+            r="6"
+            fill="#FFFFFF"
+            stroke="#AB47BC"
+            stroke-width="2"/>
+
+    <circle cx="170"
+            cy="142"
+            r="9"
+            fill="#AB47BC"/>
+
+    <!-- Badge -->
+
+    <rect x="62"
+          y="174"
+          width="126"
+          height="36"
+          rx="10"
+          fill="#FFFFFF"
+          stroke="url(#borderGrad)"
+          stroke-width="2"/>
+
+    <text x="125"
+          y="199"
+          text-anchor="middle"
+          font-family="Segoe UI, Arial, sans-serif"
+          font-size="22"
+          font-weight="700"
+          fill="#304050"
+          letter-spacing="2">
+        SVG
+    </text>
+
+</svg>

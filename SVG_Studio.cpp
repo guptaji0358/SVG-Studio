@@ -197,6 +197,23 @@ public:
                                                             }
                                                         )";
                                         }
+
+    // File Icon Card Style
+    static QString FileIconCardStyle() {
+                                            return R"(
+                                                        QFrame {
+                                                                    background-color:#1E1E1E;
+                                                                    border:1px solid #303030;
+                                                                    border-radius:8px;
+                                                                    padding:4px;
+                                                                }
+
+                                                        QFrame:hover {
+                                                                        border:1px solid #00FFFF;
+                                                                        background-color:#252525;
+                                                                    }
+                                                    )";
+                                        }
 };
 
 class SVGStudioDataManager {
@@ -217,6 +234,7 @@ public:
                                                                                 root["saved_paths"] = QJsonArray();
                                                                                 root["recent_files"] = QJsonArray();
                                                                                 root["recent_history_enabled"] = false;
+                                                                                root["svg_file_icons_enabled"] = false;
                                                                                 file.write(QJsonDocument(root).toJson());
                                                                                 file.close();
                                                                             }
@@ -291,6 +309,18 @@ public:
     static void SetRecentHistoryEnabled(bool enabled) {
                                                             QJsonObject data = LoadData();
                                                             data["recent_history_enabled"] = enabled;
+                                                            SaveData(data);
+                                                        }
+
+    static bool IsSvgFileIconsEnabled() {
+                                            QJsonObject data = LoadData();
+                                            return data["svg_file_icons_enabled"].toBool(false);
+                                            // SaveData(data);
+                                        }
+
+    static void SetSvgFileIconsEnabled(bool enabled) {
+                                                            QJsonObject data = LoadData();
+                                                            data["svg_file_icons_enabled"] = enabled;
                                                             SaveData(data);
                                                         }
 };
@@ -923,7 +953,7 @@ protected:
                                                                 }
 };
 
-// class - Remocve Button SVG Switch while hove r n REMOVE Button 
+// class - Remove and Edit Button SVG Switch while hover and REMOVE Button 
 class RemoveButtonHoverFilter : public QObject {
 private:
     QPushButton* button;
@@ -945,6 +975,38 @@ protected:
 
         return QObject::eventFilter(watched,event);
     }
+};
+
+// Sho wand Hide Priview and Apply Button class
+class FileIconCardHoverFilter : public QObject {
+// Members
+private:
+    QPushButton* previewButton;
+    QPushButton* applyButton;
+
+// Methods
+public:
+    FileIconCardHoverFilter(QPushButton* previewBtn,QPushButton* applyBtn) {
+                                                                                previewButton = previewBtn;
+                                                                                applyButton = applyBtn;
+                                                                            }
+
+protected:
+    bool eventFilter(QObject* watched,QEvent* event) override {
+                                                                    // Results - Show the Priview + Apply Button(s) while Hover
+                                                                    if(event->type() == QEvent::Enter) {
+                                                                                                            previewButton->show();
+                                                                                                            applyButton->show();
+                                                                                                        }
+
+                                                                    // Results - Hide the Priview + Apply Button(s) while Leave or Mous eOutside
+                                                                    if(event->type() == QEvent::Leave) {
+                                                                                                            previewButton->hide();
+                                                                                                            applyButton->hide();
+                                                                                                        }
+
+                                                                    return QObject::eventFilter(watched,event);
+                                                                }
 };
 
 // Settings Class
@@ -976,6 +1038,15 @@ private:
     QRadioButton *pathRadio;
     QString pendingRemovePath;
     QFrame* pendingRemoveCard;
+    QLabel *svgFileIconsLabel;
+    SVGStudioToggle *svgFileIconsToggle;
+    QLabel *darkFileIconLabel;
+    QLabel *lightFileIconLabel;
+    QLabel *systemFileIconLabel;
+    QPushButton *applyButton;
+    QPushButton *priviewButton;
+    QHBoxLayout *buttonRow;
+    QHBoxLayout *iconToggleLayout;
 
 public:
     QFrame* CreateSeparator() {
@@ -1179,6 +1250,113 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     addPathButton->setCursor(Qt::PointingHandCursor);
                                     addPathButton->setStyleSheet(Style::AddPathButtonStyle());
 
+                                    // Toggle - ON/OFF Toggle for App Icon (Enable SVG File Icons + Toggle)
+                                    svgFileIconsLabel = new QLabel("Enable SVG File Icons");
+                                    svgFileIconsToggle = new SVGStudioToggle;
+
+                                    // Frame - Drak Card Frame/Card
+                                    QFrame *darkCard = new QFrame;
+                                    darkCard->setStyleSheet(Style::FileIconCardStyle());
+
+                                    QHBoxLayout *darkLayout = new QHBoxLayout;
+
+                                    // Label - Create Drak Mode SVG File Label
+                                    QLabel *darkLabel =new QLabel("Apply Light Mode SVG File Icon");
+
+                                    // Button - Priview Button
+                                    QPushButton *darkPreviewButton = new QPushButton("Preview");
+                                    darkPreviewButton->setToolTip("Priview of File Icon");
+                                    darkPreviewButton->setCursor(Qt::PointingHandCursor);
+
+                                    // Button - Apply Button
+                                    QPushButton *darkApplyButton = new QPushButton("Apply");
+                                    darkApplyButton->setCursor(Qt::PointingHandCursor);
+                                    darkApplyButton->setToolTip("Apply File Icon");
+
+                                    darkPreviewButton->hide();
+                                    darkApplyButton->hide();
+
+                                    darkLayout->addWidget(darkLabel);
+                                    darkLayout->addStretch();
+                                    darkLayout->addWidget(darkPreviewButton);
+                                    darkLayout->addWidget(darkApplyButton);
+
+                                    darkCard->setLayout(darkLayout);
+                                    darkCard->installEventFilter(new FileIconCardHoverFilter(
+                                                                                                darkPreviewButton,
+                                                                                                darkApplyButton
+                                                                                            )
+                                                                                        );
+                                                                                
+                                    // Frame - Light Card Frame/Card
+                                    QFrame *lightCard = new QFrame;
+                                    lightCard->setStyleSheet(Style::FileIconCardStyle());
+
+                                    QHBoxLayout *lightLayout = new QHBoxLayout;
+
+                                    // Label - Create Light Mode SVG File Label
+                                    QLabel *lightLabel = new QLabel("Apply Light Mode SVG File Icon");
+
+                                    // Button - Priview Button
+                                    QPushButton *lightPreviewButton = new QPushButton("Preview");
+                                    lightPreviewButton->setToolTip("Priview of File Icon");
+                                    lightPreviewButton->setCursor(Qt::PointingHandCursor);
+
+                                    // Button - Apply Button
+                                    QPushButton *lightApplyButton = new QPushButton("Apply");
+                                    lightApplyButton->setCursor(Qt::PointingHandCursor);
+                                    lightApplyButton->setToolTip("Apply File Icon");
+
+                                    lightPreviewButton->hide();
+                                    lightApplyButton->hide();
+
+                                    lightLayout->addWidget(lightLabel);
+                                    lightLayout->addStretch();
+                                    lightLayout->addWidget(lightPreviewButton);
+                                    lightLayout->addWidget(lightApplyButton);
+
+                                    lightCard->setLayout(lightLayout);
+                                    lightCard->installEventFilter(new FileIconCardHoverFilter(
+                                                                                                lightPreviewButton,
+                                                                                                lightApplyButton
+                                                                                            )
+                                                                                        );
+
+                                    // Frame - System Card Frame/Card
+                                    QFrame *systemCard = new QFrame;
+                                    systemCard->setStyleSheet(Style::FileIconCardStyle());
+
+                                    QHBoxLayout *systemLayout = new QHBoxLayout;
+
+                                    // Label - Create Light Mode SVG File Label
+                                    QLabel *systemLabel =new QLabel("Apply System Mode SVG File Icon");
+
+                                    // Button - Priview Button
+                                    QPushButton *systemPreviewButton = new QPushButton("Preview");
+                                    systemPreviewButton->setToolTip("Priview of Both File Icon(s)");
+                                    systemPreviewButton->setCursor(Qt::PointingHandCursor);
+
+                                    // Button - Apply Button
+                                    QPushButton *systemApplyButton = new QPushButton("Apply");
+                                    systemApplyButton->setCursor(Qt::PointingHandCursor);
+                                    systemApplyButton->setToolTip("Apply File Icon");
+
+                                    systemPreviewButton->hide();
+                                    systemApplyButton->hide();
+
+                                    systemLayout->addWidget(systemLabel);
+                                    systemLayout->addStretch();
+                                    systemLayout->addWidget(systemPreviewButton);
+                                    systemLayout->addWidget(systemApplyButton);
+
+                                    systemCard->setLayout(systemLayout);
+                                    systemCard->installEventFilter(new FileIconCardHoverFilter(
+                                                                                                systemPreviewButton,
+                                                                                                systemApplyButton
+                                                                                            )
+                                                                                        );
+
+
                                     layout->addWidget(savedPathsLabel);
                                     layout->addLayout(savedPathsLayout);
 
@@ -1196,7 +1374,19 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryLayout);
                                     layout->addWidget(CreateSeparator());
-                                    layout->addStretch();
+
+                                    // Layout - Apply File Icon Section Layout
+                                    iconToggleLayout = new QHBoxLayout;
+                                    iconToggleLayout->addWidget(svgFileIconsLabel);
+                                    iconToggleLayout->addStretch();
+                                    iconToggleLayout->addWidget(svgFileIconsToggle);
+                                    layout->addLayout(iconToggleLayout);
+
+                                    // Layout - Icon(s) Cards Layout
+                                    layout->addWidget(darkCard);
+                                    layout->addWidget(lightCard);
+                                    layout->addWidget(systemCard);
+                                    layout->addWidget(CreateSeparator());
 
                                     // Apply Layout
                                     customizeTab->setLayout(layout);
