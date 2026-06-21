@@ -51,6 +51,10 @@ Project - SVG Studio
 #include<QFile>
 #include<QPropertyAnimation>
 #include<QFrame>
+#include<windows.h>
+#include<shlobj.h>
+#include<QSettings>
+#include<QScrollArea>
 
 // Paths Collection class
 class FilePaths {
@@ -70,8 +74,63 @@ public:
                     static inline const QString GlowRedRemoveButtonIconPath = ":/GLOW_RED_REMOVE.svg";
                     static inline const QString DarkModeSvgFileIconPath = ":/DARK_MODE_SVG_FILE_ICON.svg";
                     static inline const QString LightModeSvgFileIconPath = ":/LIGHT_MODE_SVG_FILE_ICON.svg";
+                    static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
+                    static inline const QString LightModeSvgFileICOIcon ="LIGHT_MODE_SVG_FILE_ICON.ico";
                     static inline const QString DataFileName ="SVGStudioData.json";
                 };
+
+// Apply ICO in File Explorer
+class ExplorerIconManager {
+public:
+    static void ApplySvgIcon(const QString& icoPath) {
+                                                        QSettings svgClass(
+                                                                                "HKEY_CURRENT_USER\\Software\\Classes\\.svg",
+                                                                                QSettings::NativeFormat
+                                                                            );
+                                                        svgClass.setValue(".", "SVGStudio.svg");
+                                                        QSettings defaultIcon(
+                                                                                "HKEY_CURRENT_USER\\Software\\Classes\\SVGStudio.svg\\DefaultIcon",
+                                                                                QSettings::NativeFormat
+                                                                            );
+                                                        defaultIcon.setValue(".", QDir::toNativeSeparators(icoPath));
+
+                                                        SHChangeNotify(
+                                                                            SHCNE_ASSOCCHANGED,
+                                                                            SHCNF_IDLIST,
+                                                                            nullptr,
+                                                                            nullptr
+                                                                        );
+
+                                                        system("ie4uinit.exe -show");
+                                                    }
+
+    static void ApplyDarkIcon() {
+                                        QString icoPath = QCoreApplication::applicationDirPath() + "/" + FilePaths::DarkModeSvgFileICOIcon; ApplySvgIcon(icoPath);
+                                    }
+
+    static void ApplyLightIcon() {
+                                    QString icoPath = QCoreApplication::applicationDirPath() + "/" + FilePaths::LightModeSvgFileICOIcon;ApplySvgIcon(icoPath);
+                                }
+};
+
+// Make App Default 
+class DefaultAppManager {
+public:
+    static void SetAsDefault() {
+                                    QString exePath = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+                                    QSettings svgClass("HKEY_CURRENT_USER\\Software\\Classes\\.svg",QSettings::NativeFormat);
+                                    svgClass.setValue(".", "SVGStudio.svg");
+                                    QSettings command("HKEY_CURRENT_USER\\Software\\Classes\\SVGStudio.svg\\shell\\open\\command",QSettings::NativeFormat);
+                                    command.setValue(".","\"" + exePath + "\" \"%1\"");
+                                    SHChangeNotify( SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);
+                                }
+
+    static void RemoveDefaultApp() {
+                                        QSettings svgClass("HKEY_CURRENT_USER\\Software\\Classes\\.svg",QSettings::NativeFormat);
+                                        svgClass.remove("");
+                                        SHChangeNotify(SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);
+                                    }
+                            };
 
 class Style {
 public:
@@ -204,8 +263,8 @@ public:
     static QString FileIconCardStyle() {
                                             return R"(
                                                         QFrame {
-                                                                    background-color:#1E1E1E;
-                                                                    border:1px solid #303030;
+                                                                    background-color:none;
+                                                                    border:none;
                                                                     border-radius:8px;
                                                                     padding:4px;
                                                                 }
@@ -237,6 +296,8 @@ public:
                                                                                 root["recent_files"] = QJsonArray();
                                                                                 root["recent_history_enabled"] = false;
                                                                                 root["svg_file_icons_enabled"] = false;
+                                                                                root["default_svg_app_enabled"] = false;
+                                                                                root["svg_icon_mode"] = "system";
                                                                                 file.write(QJsonDocument(root).toJson());
                                                                                 file.close();
                                                                             }
@@ -323,6 +384,28 @@ public:
     static void SetSvgFileIconsEnabled(bool enabled) {
                                                             QJsonObject data = LoadData();
                                                             data["svg_file_icons_enabled"] = enabled;
+                                                            SaveData(data);
+                                                        }
+
+    static void SetSvgIconMode(QString mode) {
+                                                QJsonObject data = LoadData();
+                                                data["svg_icon_mode"] = mode;
+                                                SaveData(data);
+                                            }
+
+    static QString GetSvgIconMode() {
+                                        QJsonObject data = LoadData();
+                                        return data["svg_icon_mode"].toString("system");
+                                    }
+
+    static bool IsDefaultSvgAppEnabled() {
+                                            QJsonObject data = LoadData();
+                                            return data["default_svg_app_enabled"].toBool(false);
+                                        }
+
+    static void SetDefaultSvgAppEnabled(bool enabled) {
+                                                            QJsonObject data = LoadData();
+                                                            data["default_svg_app_enabled"] = enabled;
                                                             SaveData(data);
                                                         }
 };
@@ -1055,6 +1138,10 @@ private:
     QPushButton *lightApplyButton;
     QPushButton *systemPreviewButton;
     QPushButton *systemApplyButton;
+    QScrollArea *scrollArea;
+    QLabel *defaultSvgAppLabel;
+    SVGStudioToggle *defaultSvgAppToggle;
+    QHBoxLayout *defaultAppLayout;
 
 public:
     QFrame* CreateSeparator() {
@@ -1169,6 +1256,11 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     savedPathsLayout = new QVBoxLayout;
                                     recentHistoryLayout = new QHBoxLayout;
 
+                                    // Scroll Bar 
+                                    scrollArea = new QScrollArea;
+                                    scrollArea->setWidgetResizable(true);
+                                    scrollArea->setWidget(customizeTab);
+
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
                                     QStringList savedPaths;
@@ -1257,6 +1349,11 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     addPathButton->setToolTip("Add New Paths");
                                     addPathButton->setCursor(Qt::PointingHandCursor);
                                     addPathButton->setStyleSheet(Style::AddPathButtonStyle());
+
+                                    // Label - Defualt Mode Label + Toggle
+                                    defaultSvgAppLabel = new QLabel("Make SVG Studio Default SVG App");
+                                    defaultSvgAppToggle = new SVGStudioToggle;
+                                    defaultSvgAppToggle->SetChecked(SVGStudioDataManager::IsDefaultSvgAppEnabled());
 
                                     // Toggle - ON/OFF Toggle for App Icon (Enable SVG File Icons + Toggle)
                                     svgFileIconsLabel = new QLabel("Enable SVG File Icons");
@@ -1392,6 +1489,15 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     recentHistoryLayout->addWidget(recentHistoryToggle);
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryLayout);
+                                    layout->addWidget(CreateSeparator());
+
+                                    // Layout - Default Mode Layout
+                                    defaultAppLayout = new QHBoxLayout;
+                                    defaultAppLayout->addWidget(defaultSvgAppLabel);
+                                    defaultAppLayout->addStretch();
+                                    defaultAppLayout->addWidget(defaultSvgAppToggle);
+                                    layout->addWidget(CreateSeparator());
+                                    layout->addLayout(defaultAppLayout);
                                     layout->addWidget(CreateSeparator());
 
                                     // Layout - Apply File Icon Section Layout
@@ -1656,7 +1762,66 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                             connect(systemPreviewButton,&QPushButton::clicked,this,[=]() {
                                                                                                 ShowSystemPreview();
-                                                                                            });
+                                                                                            }
+                                    );
+
+                            // connect - Apply Dark App File Icon in file Explorer
+                            connect(darkApplyButton,&QPushButton::clicked,this,[=]() {
+                                                                                        QString darkIco = QCoreApplication::applicationDirPath() + "/DARK_MODE_SVG_FILE_ICON.ico";
+                                                                                        SVGStudioDataManager::SetSvgIconMode("dark");
+                                                                                        ExplorerIconManager::ApplySvgIcon(
+                                                                                                                            QDir::toNativeSeparators(darkIco)
+                                                                                                                        );
+                                                                                        QMessageBox::information(
+                                                                                                                    this,
+                                                                                                                    "SVG Studio",
+                                                                                                                    "Dark File Icon Applied"
+                                                                                                                );
+                                                                                    }
+                                    );
+
+                            // connect - Appply Light Mod eApp File Icon in File explorer
+                            connect(lightApplyButton,&QPushButton::clicked,this,[=]() {
+                                                                                           SVGStudioDataManager::SetSvgIconMode("light");
+                                                                                            ExplorerIconManager::ApplyLightIcon();
+                                                                                            QMessageBox::information(
+                                                                                                                        this,
+                                                                                                                        "SVG Studio",
+                                                                                                                        "Light File Icon Applied"
+                                                                                                                    );
+                                                                                        }
+                                    );
+
+                            connect(systemApplyButton,&QPushButton::clicked,this,[=]() {
+                                                                                            SVGStudioDataManager::SetSvgIconMode("system");
+                                                                                            QMessageBox::information(
+                                                                                                                        this,
+                                                                                                                        "SVG Studio",
+                                                                                                                        "System File Icon Applied"
+                                                                                                                    );
+                                                                                        }
+                                    );
+
+                            connect(defaultSvgAppToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
+                                                                                                            SVGStudioDataManager::SetDefaultSvgAppEnabled(checked);
+                                                                                                            if(checked) {
+                                                                                                                DefaultAppManager::SetAsDefault();
+                                                                                                                QMessageBox::information(
+                                                                                                                                            this,
+                                                                                                                                            "SVG Studio",
+                                                                                                                                            "SVG Studio is now default SVG app."
+                                                                                                                                        );
+                                                                                                            }
+                                                                                                            else {
+                                                                                                                    DefaultAppManager::RemoveDefaultApp();
+                                                                                                                    QMessageBox::information(
+                                                                                                                                                this,
+                                                                                                                                                "SVG Studio",
+                                                                                                                                                "Default SVG app disabled."
+                                                                                                                                            );
+                                                                                                                }
+                                                                                                        }
+                                    );
                         }
 
     void openSettings() {

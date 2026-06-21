@@ -33,6 +33,8 @@ qt_add_resources(SVGStudio app_resources
         DARK_MODE_SVG_FILE_ICON.svg
         LIGHT_MODE_SVG_FILE_ICON.svg
         LIGHT_MODE_SVG_FILE_ICON.svg
+        DARK_MODE_SVG_FILE_ICON.ico
+        LIGHT_MODE_SVG_FILE_ICON.ico
 )
 
 target_link_libraries(SVGStudio PRIVATE
