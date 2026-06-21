@@ -213,8 +213,8 @@ public:
     static QString PathCardStyle() {
                                         return R"(
                                                     QFrame{
-                                                                background:#1E1E1E;
-                                                                border:1px solid #333333;
+                                                                background:none;
+                                                                border:none;
                                                                 border-radius:8px;
                                                             }
                                                 )";
