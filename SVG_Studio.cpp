@@ -55,6 +55,7 @@ Project - SVG Studio
 #include<shlobj.h>
 #include<QSettings>
 #include<QScrollArea>
+#include<QTimer>
 
 // Paths Collection class
 class FilePaths {
@@ -101,7 +102,7 @@ public:
                                                                             nullptr
                                                                         );
 
-                                                        system("ie4uinit.exe -show");
+                                                        // system("ie4uinit.exe -show");
                                                     }
 
     static void ApplyDarkIcon() {
@@ -533,36 +534,83 @@ public:
 // Automate Shortcut Class
 class Automate {
 public:
-    static void CreateShortcutRow(
-                                    QTableWidget *table,
-                                    QString number,
-                                    QString shortcut,
-                                    QString action
-                                ) {
-                                        int row;
-                                        row = table->rowCount();
-                                        table->insertRow(row);
-                                        table->setItem(row,0,new QTableWidgetItem(number));
-                                        table->setItem(row,1,new QTableWidgetItem(shortcut));
-                                        table->setItem(row,2,new QTableWidgetItem(action));
-                                        
-                                        QPushButton *editButton;
-                                        editButton = new QPushButton("Edit");
-                                        editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
-                                        editButton->setIconSize(QSize(20,20));
-                                        editButton->setCursor(Qt::PointingHandCursor);
-                                        editButton->setToolTip("Edit Shortcut");
-                                        QObject::connect(editButton,&QPushButton::clicked,table,[=]() {
-                                                                                                            SVGStudioShortcutEditDialog dialog(
-                                                                                                                                                    action,
-                                                                                                                                                    shortcut
-                                                                                                                                                );
-                                                                                                            dialog.exec();
+    static void CreateShortcutRow(QTableWidget *table,QString number,QString shortcut,QString action) {
+                                                                                                        int row;
+                                                                                                        row = table->rowCount();
+                                                                                                        table->insertRow(row);
+                                                                                                        table->setItem(row,0,new QTableWidgetItem(number));
+                                                                                                        table->setItem(row,1,new QTableWidgetItem(shortcut));
+                                                                                                        table->setItem(row,2,new QTableWidgetItem(action));
+                                                                                                        
+                                                                                                        QPushButton *editButton;
+                                                                                                        editButton = new QPushButton("Edit");
+                                                                                                        editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
+                                                                                                        editButton->setIconSize(QSize(20,20));
+                                                                                                        editButton->setCursor(Qt::PointingHandCursor);
+                                                                                                        editButton->setToolTip("Edit Shortcut");
+                                                                                                        QObject::connect(editButton,&QPushButton::clicked,table,[=]() {
+                                                                                                                                                                            SVGStudioShortcutEditDialog dialog(
+                                                                                                                                                                                                                    action,
+                                                                                                                                                                                                                    shortcut
+                                                                                                                                                                                                                );
+                                                                                                                                                                            dialog.exec();
+                                                                                                                                                                        }
+                                                                                                                            );
+                                                                                                        table->setCellWidget(row,3,editButton);
+                                                                                                    }
+
+    static inline QTimer* systemThemeTimer = nullptr;
+    static void StartSystemThemeWatcher() {
+                                                if(systemThemeTimer)
+                                                    return;
+
+                                                systemThemeTimer = new QTimer;
+                                                QObject::connect(systemThemeTimer,&QTimer::timeout,[]() {
+                                                                                                            if(!SVGStudioDataManager::IsSvgFileIconsEnabled())
+                                                                                                                return;
+
+                                                                                                            if(SVGStudioDataManager::GetSvgIconMode() != "system")
+                                                                                                                return;
+
+                                                                                                            ApplySystemSvgIcon();
                                                                                                         }
-                );
-                                                                        
-                                        table->setCellWidget(row,3,editButton);
+                                                                );
+
+                                                systemThemeTimer->start(5000); // 1000 = 1 second
+                                            }
+
+    static void ApplySystemSvgIcon() {
+                                        QSettings personalize("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
+                                        bool darkTheme = personalize.value("AppsUseLightTheme",1).toInt() == 0;
+                                        if(darkTheme) {
+                                                            ExplorerIconManager::ApplyDarkIcon();
+                                                        }
+                                        else {
+                                                ExplorerIconManager::ApplyLightIcon();
+                                            }
                                     }
+
+    static void SystemIconApply(QWidget* parent) {
+                                                    SVGStudioDataManager::SetSvgIconMode("system");
+                                                    ApplySystemSvgIcon();
+                                                    StartSystemThemeWatcher();
+                                                    QMessageBox::information(
+                                                                                parent,
+                                                                                "SVG Studio",
+                                                                                "System SVG File Icon Applied"
+                                                                            );
+                                                }
+
+    static void StartupChecks() {
+                                    if(!SVGStudioDataManager::IsSvgFileIconsEnabled())
+                                        return;
+
+                                    QString mode = SVGStudioDataManager::GetSvgIconMode();
+                                    if(mode == "system") {
+                                                            ApplySystemSvgIcon();
+                                                            StartSystemThemeWatcher();
+                                                        }
+                                }
 };
 
 class SVGStudioMessages {
@@ -1792,13 +1840,9 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         }
                                     );
 
+                            // connect - Aply Light / Dark SVG File Icon  on svg files  accoridng os
                             connect(systemApplyButton,&QPushButton::clicked,this,[=]() {
-                                                                                            SVGStudioDataManager::SetSvgIconMode("system");
-                                                                                            QMessageBox::information(
-                                                                                                                        this,
-                                                                                                                        "SVG Studio",
-                                                                                                                        "System File Icon Applied"
-                                                                                                                    );
+                                                                                            Automate::SystemIconApply(this);
                                                                                         }
                                     );
 
