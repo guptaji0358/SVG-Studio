@@ -276,6 +276,17 @@ public:
                                                                     }
                                                     )";
                                         }
+
+    // Edit Button Style
+    static QString editButtnStyle() {
+                                        return R"(
+                                                QPushButton {
+                                                                background:none;
+                                                                color:#FFFFFF;
+                                                                font-weight:bold;
+                                                            }
+                                        )";
+                                    }
 };
 
 class SVGStudioDataManager {
@@ -1359,7 +1370,12 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                         editButton->setToolTip("Edit Path");
                                                                         editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
                                                                         editButton->setText("Edit");
+                                                                        editButton->setStyleSheet(Style::editButtnStyle());
                                                                         editButton->hide();
+                                                                        connect(editButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                ShowEditPathDialog(path,pathRadio);
+                                                                                                                            }
+                                                                                );
 
                                                                         cardLayout->addWidget(pathRadio);
                                                                         cardLayout->addStretch();
@@ -1711,6 +1727,11 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                 editButton->setToolTip("Edit Path");
                                                                                                 editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
                                                                                                 editButton->setText("Edit");
+                                                                                                connect(editButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                                        ShowEditPathDialog(path,pathRadio);
+                                                                                                                                                    }
+                                                                                                        );
+                                                                                                        
                                                                                                 editButton->hide();
 
                                                                                                 pathCard->setStyleSheet(Style::PathCardStyle());
@@ -1739,6 +1760,119 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                                 dialog.exec();
                             }
+
+    // Path Edit Window
+    void ShowEditPathDialog(QString oldPath,QRadioButton* pathRadio) {
+                                                                        QHBoxLayout *buttonLayout;
+                                                                        buttonLayout = new QHBoxLayout;
+                                                                        QVBoxLayout *mainLayout;
+                                                                        mainLayout = new QVBoxLayout;
+
+                                                                        QDialog dialog(this);
+                                                                        dialog.setWindowTitle("Edit Path");
+                                                                        dialog.resize(500,150);
+
+                                                                        QLineEdit *pathEdit;
+                                                                        pathEdit = new QLineEdit;
+                                                                        pathEdit->setText(oldPath);
+                                                                        pathEdit->setPlaceholderText(oldPath);
+
+                                                                        QPushButton *browseButton;
+                                                                        browseButton = new QPushButton("Browse");
+                                                                        browseButton->setCursor(Qt::PointingHandCursor);
+                                                                        browseButton->setToolTip("Browse Paths");
+
+                                                                        QPushButton *addButton;
+                                                                        addButton = new QPushButton("Save");
+                                                                        addButton->setCursor(Qt::PointingHandCursor);
+                                                                        addButton->setToolTip("Save Path");
+
+                                                                        QPushButton *cancelButton;
+                                                                        cancelButton = new QPushButton("Cancel");
+                                                                        cancelButton->setCursor(Qt::PointingHandCursor);
+                                                                        cancelButton->setToolTip("Cancel");
+
+                                                                        QHBoxLayout *pathLayout;
+                                                                        pathLayout = new QHBoxLayout;
+
+                                                                        pathLayout->addWidget(pathEdit);
+                                                                        pathLayout->addWidget(browseButton);
+
+                                                                        buttonLayout->addStretch();
+                                                                        buttonLayout->addWidget(addButton);
+                                                                        buttonLayout->addWidget(cancelButton);
+
+                                                                        mainLayout->addLayout(pathLayout);
+                                                                        mainLayout->addLayout(buttonLayout);
+
+                                                                        dialog.setLayout(mainLayout);
+
+                                                                        // Browse Button Connection
+                                                                        connect(browseButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                    QString path;
+                                                                                                                                    path = QFileDialog::getExistingDirectory(this,"Select Folder");
+                                                                                                                                    if(!path.isEmpty()) {
+                                                                                                                                                            pathEdit->setText(path);
+                                                                                                                                                        }
+                                                                                                                                }
+                                                                                );
+                                                                        
+                                                                        // Cancel Button Connection
+                                                                        connect(cancelButton,&QPushButton::clicked,[&,this]() {
+                                                                                                                                    QMessageBox::StandardButton reply;
+                                                                                                                                    reply = SVGStudioMessages::ConfirmCancel(this);
+                                                                                                                                    if(reply == QMessageBox::Yes) {
+                                                                                                                                        dialog.reject();
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                );
+
+                                                                        // Check Path Is Valid or Invalid and Add if exists
+                                                                        connect(addButton,&QPushButton::clicked,this,[=,&dialog]() {
+                                                                                                                                        QString path;
+                                                                                                                                        path = pathEdit->text();
+                                                                                                                                        if(path.trimmed().isEmpty()) {
+                                                                                                                                                                        SVGStudioMessages::invalidPath(this);
+                                                                                                                                                                        return;
+                                                                                                                                                                    }
+                                                                                                                                        QRegularExpression regex("^[A-Z]:[/\\\\].*");
+                                                                                                                                        if(!regex.match(path.toUpper()).hasMatch()) {
+                                                                                                                                                                                        SVGStudioMessages::invalidPath(this);
+                                                                                                                                                                                        return;
+                                                                                                                                                                                    }
+
+                                                                                                                                        if(!QDir(path).exists()) {
+                                                                                                                                                                    QMessageBox::StandardButton reply;
+                                                                                                                                                                    reply = SVGStudioMessages::confirmtoCreatePath(this);
+                                                                                                                                                                    if(reply == QMessageBox::Yes) {
+                                                                                                                                                                                                    QDir().mkpath(path);
+                                                                                                                                                                                                }
+                                                                                                                                                                    else {
+                                                                                                                                                                                return;
+                                                                                                                                                                            }
+                                                                                                                                                                }
+
+                                                                                                                                        // RadioButton - Path Radio Button
+                                                                                                                                        pathRadio->setText(path);
+                                                                                                                                        pathRadio->setToolTip(path);
+
+                                                                                                                                        // pathCard->installEventFilter(new PathCardHoverFilter(
+                                                                                                                                        //                                                         editButton,
+                                                                                                                                        //                                                         removeButton
+                                                                                                                                        //                                                     )
+                                                                                                                                        //                             );
+                                                                                                                                                                    
+                                                                                                                                        SVGStudioDataManager::RemovePath(oldPath);
+                                                                                                                                        pathRadio->setText(path);
+                                                                                                                                        pathRadio->setToolTip(path);
+                                                                                                                                        SVGStudioDataManager::AddPath(path);
+                                                                                                                                        SVGStudioMessages::Success(this);
+                                                                                                                                        dialog.accept();
+                                                                                                                                    }
+                                                                                );
+
+                                                                        dialog.exec();
+                                                                    }
 
     void RemovePathCard(QString path,QFrame* pathCard) {
                                                             QMessageBox::StandardButton reply;
