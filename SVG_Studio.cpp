@@ -280,12 +280,13 @@ public:
     // Edit Button Style
     static QString editButtnStyle() {
                                         return R"(
-                                                QPushButton {
-                                                                background:none;
-                                                                color:#FFFFFF;
-                                                                font-weight:bold;
-                                                            }
-                                        )";
+                                                        QPushButton {
+                                                                        background:none;
+                                                                        color:#ffffff;
+                                                                        border:none;
+                                                                        font-weight:bold;
+                                                                    }
+                                                    )";
                                     }
 };
 
@@ -1726,6 +1727,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                 editButton->setCursor(Qt::PointingHandCursor);
                                                                                                 editButton->setToolTip("Edit Path");
                                                                                                 editButton->setIcon(QIcon(FilePaths::editButtonIconPath));
+                                                                                                editButton->setStyleSheet(Style::editButtnStyle());
                                                                                                 editButton->setText("Edit");
                                                                                                 connect(editButton,&QPushButton::clicked,this,[=]() {
                                                                                                                                                         ShowEditPathDialog(path,pathRadio);
@@ -1855,13 +1857,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                                                         // RadioButton - Path Radio Button
                                                                                                                                         pathRadio->setText(path);
                                                                                                                                         pathRadio->setToolTip(path);
-
-                                                                                                                                        // pathCard->installEventFilter(new PathCardHoverFilter(
-                                                                                                                                        //                                                         editButton,
-                                                                                                                                        //                                                         removeButton
-                                                                                                                                        //                                                     )
-                                                                                                                                        //                             );
-                                                                                                                                                                    
+ 
                                                                                                                                         SVGStudioDataManager::RemovePath(oldPath);
                                                                                                                                         pathRadio->setText(path);
                                                                                                                                         pathRadio->setToolTip(path);
