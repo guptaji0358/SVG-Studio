@@ -767,9 +767,17 @@ public:
                                                                         QStringList filePaths;
                                                                         filePaths = logic.openSVG(parent);
                                                                         for (QString filePath:filePaths) {
+                                                                                                                QFile file(filePath);
                                                                                                                 SVGStudioEditorTab *svgWidget;
                                                                                                                 svgWidget = new SVGStudioEditorTab;
                                                                                                                 svgWidget->getPreview()->load(filePath);
+                                                                                                                if(file.open(QIODevice::ReadOnly)) {
+                                                                                                                                                        svgWidget->getEditor()->setPlainText(
+                                                                                                                                                                                                file.readAll()
+                                                                                                                                                                                            );
+
+                                                                                                                                                        file.close();
+                                                                                                                                                    }
                                                                                                                 tabWidget->addTab(svgWidget,QFileInfo(filePath).fileName());
                                                                                                                 tabWidget->setTabToolTip(tabWidget->indexOf(svgWidget),filePath);
                                                                                                                 tabWidget->setCurrentWidget(svgWidget);
@@ -2175,11 +2183,18 @@ protected:
     void dropEvent(QDropEvent *event) override {
                                                     dragOverlay->hide();
                                                     QList<QUrl> urls = event->mimeData()->urls();
-
                                                     for(QUrl url : urls) {
                                                                             QString filePath = url.toLocalFile();
+                                                                            QFile file(filePath);
                                                                             SVGStudioEditorTab *editorTab = new SVGStudioEditorTab;
                                                                             editorTab->getPreview()->load(filePath);
+                                                                            if(file.open(QIODevice::ReadOnly)) {
+                                                                                                                    editorTab->getEditor()->setPlainText(
+                                                                                                                                                            file.readAll()
+                                                                                                                                                        );
+
+                                                                                                                    file.close();
+                                                                                                                }
                                                                             tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
                                                                             tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
                                                                             tabWidget->setCurrentWidget(editorTab);
@@ -2735,6 +2750,10 @@ public:
 // Calls App
 int main(int argc, char *argv[]) {
                                     QApplication app(argc, argv);
+                                    QString startupFile;
+                                    if(argc > 1) {
+                                                        startupFile = argv[1];
+                                                    }
                                     SVGStudioGui studio;
                                     studio.show();
                                     return app.exec();
