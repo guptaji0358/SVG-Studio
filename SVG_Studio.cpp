@@ -1309,6 +1309,9 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
     // Create Customize Tab in settings
     void CreateCustomiseTab() {
                                     customizeTab = new QWidget;
+                                    QWidget *scrollContent;
+                                    scrollContent = new QWidget;
+
                                     QVBoxLayout *layout;
                                     QHBoxLayout *recentHistoryLayout;
 
@@ -1316,10 +1319,10 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     savedPathsLayout = new QVBoxLayout;
                                     recentHistoryLayout = new QHBoxLayout;
 
-                                    // Scroll Bar 
-                                    scrollArea = new QScrollArea;
-                                    scrollArea->setWidgetResizable(true);
-                                    scrollArea->setWidget(customizeTab);
+                                    // // Scroll Bar 
+                                    // scrollArea = new QScrollArea;
+                                    // scrollArea->setWidgetResizable(true);
+                                    // scrollArea->setWidget(customizeTab);
 
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
@@ -1579,7 +1582,14 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     layout->addWidget(CreateSeparator());
 
                                     // Apply Layout
-                                    customizeTab->setLayout(layout);
+                                    scrollContent->setLayout(layout);
+                                    scrollArea = new QScrollArea;
+                                    scrollArea->setWidgetResizable(true);
+                                    scrollArea->setWidget(scrollContent);
+                                    QVBoxLayout *tabLayout;
+                                    tabLayout = new QVBoxLayout;
+                                    tabLayout->addWidget(scrollArea);
+                                    customizeTab->setLayout(tabLayout);
                                     settingsTabs->addTab(customizeTab,"Customize");
                                 }
 
