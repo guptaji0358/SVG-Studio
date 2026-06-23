@@ -763,51 +763,63 @@ private:
     SVGStudioLogic logic;
 
 public:
+    static void OpenSvgInTab(QString filePath,QTabWidget *tabWidget) {
+                                                                        QFile file(filePath);
+                                                                        SVGStudioEditorTab *editorTab;
+                                                                        editorTab = new SVGStudioEditorTab;
+                                                                        editorTab->getPreview()->load(filePath);
+                                                                        if(file.open(QIODevice::ReadOnly)) {
+                                                                                                                editorTab->getEditor()->setPlainText(
+                                                                                                                                                        file.readAll()
+                                                                                                                                                    );
+
+                                                                                                                file.close();
+                                                                                                            }
+
+                                                                        tabWidget->addTab(editorTab, QFileInfo(filePath).fileName());
+                                                                        tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
+                                                                        tabWidget->setCurrentWidget(editorTab);
+                                                                    }
+
+    // Open a Existing SVG File Using Open File... Button on WelcomePage
     void openFileButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
                                                                         QStringList filePaths;
                                                                         filePaths = logic.openSVG(parent);
                                                                         for (QString filePath:filePaths) {
-                                                                                                                QFile file(filePath);
-                                                                                                                SVGStudioEditorTab *svgWidget;
-                                                                                                                svgWidget = new SVGStudioEditorTab;
-                                                                                                                svgWidget->getPreview()->load(filePath);
-                                                                                                                if(file.open(QIODevice::ReadOnly)) {
-                                                                                                                                                        svgWidget->getEditor()->setPlainText(
-                                                                                                                                                                                                file.readAll()
-                                                                                                                                                                                            );
-
-                                                                                                                                                        file.close();
-                                                                                                                                                    }
-                                                                                                                tabWidget->addTab(svgWidget,QFileInfo(filePath).fileName());
-                                                                                                                tabWidget->setTabToolTip(tabWidget->indexOf(svgWidget),filePath);
-                                                                                                                tabWidget->setCurrentWidget(svgWidget);
-                                                                                                            }
+                                                                                                            OpenSvgInTab(filePath,tabWidget);
+                                                                                                        }
                                                                     }
                         
+    // Create New SVG  File Using ctrl + N & New File Button on WelcomePage
     void newFileButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
+                                                                        // Member - Dialog
                                                                         QDialog dialog(parent);
 
+                                                                        // Member -( Title + New file + Location + .svg extension) Labels(s)
                                                                         QLabel *titleLabel;
                                                                         QLabel *fileNameLabel;
                                                                         QLabel *locationLabel;
                                                                         QLabel *svgLabel;
 
+                                                                        //Member - (New File + File Loaction) Input(s)
                                                                         QLineEdit *fileNameEdit;
                                                                         QLineEdit *pathEdit;
 
+                                                                        // Memebrs - (Browse + Create + cancel) Button(s)
                                                                         QPushButton *browseButton;
                                                                         QPushButton *createButton;
                                                                         QPushButton *cancelButton;
 
+                                                                        // Members - Create a box + Holds Paths
                                                                         QButtonGroup *pathGroup;
+                                                                        QGroupBox *quickPathsGroup;
 
+                                                                        // Members - New File Dialog Layout(s)
                                                                         QVBoxLayout *mainLayout;
                                                                         QHBoxLayout *nameLayout;
                                                                         QVBoxLayout *quickPathsLayout;
                                                                         QHBoxLayout *buttonLayout;
                                                                         QHBoxLayout *locationLayout;
-
-                                                                        QGroupBox *quickPathsGroup;
 
                                                                         auto CreateWidgets = [&]() {
                                                                                                         // Create Dialog Box
@@ -913,7 +925,10 @@ public:
                                                                                                         dialog.setLayout(mainLayout);
                                                                                                     };
 
+                                                                        // cionnect - Browse + Cancel + create Button(s) connectons
                                                                         auto CreateConnections = [&]() {
+
+                                                                                                        // connect - Browse Button Logic
                                                                                                         QObject::connect(browseButton,&QPushButton::clicked,[&]() {
                                                                                                                                                                         QString path;
                                                                                                                                                                         path = QFileDialog::getExistingDirectory(
@@ -932,11 +947,13 @@ public:
                                                                                                                                                                     }
                                                                                                                     );
 
+                                                                                                            // connect - Cancel Button Logic
                                                                                                             QObject::connect(cancelButton,&QPushButton::clicked,[&]() {
                                                                                                                                                                 dialog.reject();
                                                                                                                                                             }
                                                                                                                     );
 
+                                                                                                            // connect - Create Button Logic
                                                                                                             QObject::connect(createButton,&QPushButton::clicked,[&]() {
                                                                                                                                                                         QString fileName;
                                                                                                                                                                         fileName = fileNameEdit->text().trimmed();
@@ -988,7 +1005,7 @@ public:
                                                                                                                                                                             if (QFile::exists(fullPath)) {
 
                                                                                                                                                                             }
-                                                                                                                                                                            // fullPath = QDir(folderPath).filePath(fileName + ".svg");
+
                                                                                                                                                                             QFile file(fullPath);
                                                                                                                                                                             if (file.open(QIODevice::WriteOnly)) {
                                                                                                                                                                                                                     file.write(
@@ -1045,6 +1062,7 @@ public:
                                                                         dialog.exec();
                                                                     }
 
+    // Open  Every .svg(s) that  exists inside a folder
     void openFolderButtonLogic(QWidget *parent,QTabWidget *tabWidget) {
                                                                             QString folderPath;
                                                                             folderPath = logic.openFolder(parent);
@@ -1057,12 +1075,10 @@ public:
                                                                             for (QString file:svgFiles) {
                                                                                                             QString fullpath;
                                                                                                             fullpath = folder.filePath(file);
-                                                                                                            SVGStudioEditorTab *svgWidget;
-                                                                                                            svgWidget = new SVGStudioEditorTab;
-                                                                                                            svgWidget->getPreview()->load(fullpath);
-                                                                                                            tabWidget->addTab(svgWidget,QFileInfo(fullpath).fileName());
-                                                                                                            tabWidget->setTabToolTip(tabWidget->indexOf(svgWidget),fullpath);
-                                                                                                            tabWidget->setCurrentWidget(svgWidget);
+                                                                                                            OpenSvgInTab(
+                                                                                                                            fullpath,
+                                                                                                                            tabWidget
+                                                                                                                        );
                                                                                                         }
 
                                                                         }
@@ -2184,20 +2200,12 @@ protected:
                                                     dragOverlay->hide();
                                                     QList<QUrl> urls = event->mimeData()->urls();
                                                     for(QUrl url : urls) {
-                                                                            QString filePath = url.toLocalFile();
-                                                                            QFile file(filePath);
-                                                                            SVGStudioEditorTab *editorTab = new SVGStudioEditorTab;
-                                                                            editorTab->getPreview()->load(filePath);
-                                                                            if(file.open(QIODevice::ReadOnly)) {
-                                                                                                                    editorTab->getEditor()->setPlainText(
-                                                                                                                                                            file.readAll()
-                                                                                                                                                        );
-
-                                                                                                                    file.close();
-                                                                                                                }
-                                                                            tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
-                                                                            tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
-                                                                            tabWidget->setCurrentWidget(editorTab);
+                                                                            QString filePath;
+                                                                            filePath = url.toLocalFile();
+                                                                            SVGStudioButtonLogic::OpenSvgInTab(
+                                                                                                                filePath,
+                                                                                                                tabWidget
+                                                                                                            );
                                                                         }
                                                 }
 
@@ -2437,23 +2445,29 @@ class SVGStudioGui : public QMainWindow {
 
 public:
     SVGStudioGui() {
-        // Window Setup
-        CreateMainWindow();
+                        // Window Setup
+                        CreateMainWindow();
 
-        // Widget Creation
-        CreateCentralWidget();
-        CreateWidgets();
+                        // Widget Creation
+                        CreateCentralWidget();
+                        CreateWidgets();
 
-        // Layout Setup
-        CreateLayouts(centralWidget);
+                        // Layout Setup
+                        CreateLayouts(centralWidget);
 
-        // Menu Setup
-        CreateMenus();
-        CreateStatusBar();
+                        // Menu Setup
+                        CreateMenus();
+                        CreateStatusBar();
 
-        // Signal Connections
-        CreateConnections();
-    }
+                        // Signal Connections
+                        CreateConnections();
+
+
+                    } 
+                    
+    QTabWidget* GetTabWidget() {
+                                    return tabWidget;
+                                }
 
     void CreateCentralWidget() {
                                     centralWidget = new QWidget;
@@ -2756,6 +2770,12 @@ int main(int argc, char *argv[]) {
                                                     }
                                     SVGStudioGui studio;
                                     studio.show();
+                                    if(!startupFile.isEmpty()) {
+                                        SVGStudioButtonLogic::OpenSvgInTab(
+                                                                                startupFile,
+                                                                                studio.GetTabWidget()
+                                                                            );
+                                                                }
                                     return app.exec();
                                 }
 
