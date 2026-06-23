@@ -84,7 +84,7 @@ public:
                     static inline const QString LightModeSvgFileIconPath = ":/LIGHT_MODE_SVG_FILE_ICON.svg";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon ="LIGHT_MODE_SVG_FILE_ICON.ico";
-                    static inline const QString DataFileName ="SVGStudioData.json";
+                    static inline const QString DataFileName ="/SVGStudioData.json";
                 };
 
 // Apply ICO in File Explorer
@@ -300,16 +300,18 @@ public:
 class SVGStudioDataManager {
 public:
     static QString GetDataFilePath() {
-                                        QFile file(FilePaths::DataFileName);
+                                        QString dataPath = QCoreApplication::applicationDirPath() + FilePaths::DataFileName;
+                                        QFile file(dataPath);
                                         if(!file.exists()) {
                                                                 CreateDefaultJson();
                                                             }
 
-                                        return FilePaths::DataFileName;
+                                        return dataPath;
                                     }
 
     static void CreateDefaultJson() {
-                                        QFile file(FilePaths::DataFileName);
+                                        QString dataPath = QCoreApplication::applicationDirPath() + FilePaths::DataFileName;
+                                        QFile file(dataPath);
                                         if(file.open(QIODevice::WriteOnly)) {
                                                                                 QJsonObject root;
                                                                                 root["saved_paths"] = QJsonArray();
