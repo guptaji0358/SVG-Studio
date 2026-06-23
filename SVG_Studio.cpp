@@ -56,6 +56,13 @@ Project - SVG Studio
 #include<QSettings>
 #include<QScrollArea>
 #include<QTimer>
+#include<QLocalServer>
+#include<QLocalSocket>
+
+class SVGStudioInstanceManager {
+public:
+    static inline const QString ServerName = "SVGStudioServer";
+};
 
 // Paths Collection class
 class FilePaths {
@@ -2464,7 +2471,7 @@ public:
 
 
                     } 
-                    
+
     QTabWidget* GetTabWidget() {
                                     return tabWidget;
                                 }
@@ -2765,11 +2772,43 @@ public:
 int main(int argc, char *argv[]) {
                                     QApplication app(argc, argv);
                                     QString startupFile;
+
                                     if(argc > 1) {
                                                         startupFile = argv[1];
                                                     }
+                                    QLocalSocket socket;
+                                    socket.connectToServer(SVGStudioInstanceManager::ServerName);
+                                    // Condition - Chek if Ouur App Already opened  or not
+                                    if(socket.waitForConnected(100)) {
+                                                                        if(!startupFile.isEmpty()) {
+                                                                                                        socket.write(startupFile.toUtf8());
+                                                                                                        socket.flush();
+                                                                                                        socket.waitForBytesWritten();
+                                                                                                    }
+
+                                                                        return 0;
+                                                                    }
+
+                                    // QString startupFile;
+                                    // if(argc > 1) {
+                                    //                     startupFile = argv[1];
+                                    //                 }
                                     SVGStudioGui studio;
                                     studio.show();
+                                    QLocalServer *server;
+                                    server = new QLocalServer;
+                                    server->listen(SVGStudioInstanceManager::ServerName);
+                                    QObject::connect(server,&QLocalServer::newConnection,[&]() {
+                                                                                                    QLocalSocket *client;
+                                                                                                    client = server->nextPendingConnection();
+                                                                                                    client->waitForReadyRead();
+                                                                                                    QString filePath;
+                                                                                                    filePath = QString::fromUtf8(client->readAll());
+                                                                                                    SVGStudioButtonLogic::OpenSvgInTab(filePath,studio.GetTabWidget());
+                                                                                                    client->deleteLater();
+                                                                                                }
+                                                    );
+
                                     if(!startupFile.isEmpty()) {
                                         SVGStudioButtonLogic::OpenSvgInTab(
                                                                                 startupFile,

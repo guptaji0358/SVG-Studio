@@ -5,7 +5,13 @@ project(SVGStudio LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets SvgWidgets)
+find_package(
+    Qt6 REQUIRED
+    COMPONENTS
+    Widgets
+    SvgWidgets
+    Network
+)
 
 qt_standard_project_setup()
 
@@ -40,6 +46,7 @@ qt_add_resources(SVGStudio app_resources
 target_link_libraries(SVGStudio PRIVATE
     Qt6::Widgets
     Qt6::SvgWidgets
+    Qt6::Network
 )
 
 set_target_properties(SVGStudio PROPERTIES
