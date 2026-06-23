@@ -2103,7 +2103,6 @@ private:
     QPushButton *openFileButton;
     QPushButton *openFolderButton;
     QPushButton *convertToSvgButton;
-
     QLabel *welcomeToTheSvgStudioLabel;
     QLabel *welcomePageStartLabel;
     SVGStudioButtonLogic *buttonLogic;
@@ -2115,14 +2114,14 @@ private:
     QMovie *dragAnimationMovie;
     QLabel *recentFilesLabel;
     QVBoxLayout *recentFilesLayout;
+    QVBoxLayout *rightLayout;
+    QVBoxLayout *leftLayout;
 
 public:
     SVGStudioWelcomePage(SVGStudioButtonLogic *buttonLogic,QTabWidget *tabWidget,QWidget *parent = nullptr): QWidget(parent) {
                                                                                                                                     this->buttonLogic = buttonLogic;
                                                                                                                                     this->tabWidget = tabWidget;
-
                                                                                                                                     setAcceptDrops(true);
-
                                                                                                                                     CreateWidgets();
                                                                                                                                     CreateLayouts();
                                                                                                                                     CreateConnections();
@@ -2131,6 +2130,7 @@ public:
                                                                                                                                 }
 
 private:
+    QMap<QWidget*,QPushButton*> removeButtons;
     void LoadRecentFiles() {
                                 QStringList recentFiles = SVGStudioDataManager::GetRecentFiles();
                                 for(QString path:recentFiles) {
@@ -2138,11 +2138,38 @@ private:
                                                                                                 SVGStudioDataManager::RemoveRecentFile(path);
                                                                                                 continue;
                                                                                             }
-                                                                    QPushButton *button;
-                                                                    button = new QPushButton(QFileInfo(path).fileName());
-                                                                    button->setToolTip(path);
-                                                                    button->setCursor(Qt::PointingHandCursor);
-                                                                    recentFilesLayout->addWidget(button);
+                                                                    QWidget *rowWidget;
+                                                                    rowWidget = new QWidget;
+
+                                                                    QHBoxLayout *rowLayout;
+                                                                    rowLayout = new QHBoxLayout(rowWidget);
+                                                                    rowLayout->setContentsMargins(0,0,0,0);
+
+                                                                    QPushButton *fileButton;
+                                                                    fileButton = new QPushButton(QFileInfo(path).fileName());
+                                                                    fileButton->setToolTip(path);
+                                                                    fileButton->setCursor(Qt::PointingHandCursor);
+
+                                                                    QPushButton *removeButton;
+                                                                    removeButton = new QPushButton();
+                                                                    removeButton->setCursor(Qt::PointingHandCursor);
+                                                                    removeButton->setToolTip("Remove from Recents");
+                                                                    removeButton->setIcon(QIcon(FilePaths::NormalRemoveButtonIconPath));
+                                                                    removeButton->setIconSize(QSize(48,48));
+                                                                    removeButton->setFixedSize(24,24);
+                                                                    removeButton->installEventFilter(new RemoveButtonHoverFilter(removeButton));
+                                                                    removeButton->hide();
+                                                                    removeButton->setStyleSheet(Style::RemoveButtonStyle());
+
+                                                                    rowLayout->addWidget(fileButton);
+                                                                    rowLayout->addSpacing(8);
+                                                                    rowLayout->addWidget(removeButton);
+                                                                    rowLayout->addStretch();
+
+                                                                    recentFilesLayout->addWidget(rowWidget);
+                                                                    removeButtons[rowWidget] = removeButton;
+                                                                    rowWidget->installEventFilter(this);
+                                                                    fileButton->installEventFilter(this);
                                                                 }
                             }
 
@@ -2197,7 +2224,6 @@ private:
                             QHBoxLayout *welcomeMainLayout;
                             welcomeMainLayout = new QHBoxLayout;
 
-                            QVBoxLayout *leftLayout;
                             leftLayout = new QVBoxLayout;
                             leftLayout->addStretch();
                             leftLayout->addWidget(newFileButton);
@@ -2205,7 +2231,6 @@ private:
                             leftLayout->addWidget(openFolderButton);
                             leftLayout->addWidget(convertToSvgButton);
 
-                            QVBoxLayout *rightLayout;
                             rightLayout = new QVBoxLayout;
                             rightLayout->addWidget(recentFilesLabel);
                             rightLayout->addLayout(recentFilesLayout);
@@ -2298,6 +2323,22 @@ protected:
                                                         dragOverlay->setGeometry(rect());
                                                         dragAnimationLabel->setGeometry(dragOverlay->rect());
                                                     }
+                                            
+    // Remove Button Hide and show
+    bool eventFilter(QObject *obj,QEvent *event) override {
+        QWidget *widget = qobject_cast<QWidget*>(obj);
+        if(widget && removeButtons.contains(widget)) {
+                                                            if(event->type() == QEvent::Enter) {
+                                                                                                    removeButtons[widget]->show();
+                                                                                                }
+
+                                                            if(event->type() == QEvent::Leave) {
+                                                                                                    removeButtons[widget]->hide();
+                                                                                                }
+                                                        }
+
+        return QWidget::eventFilter(obj,event);
+    }
 };
 
 class SVGStudioShortcuts {
