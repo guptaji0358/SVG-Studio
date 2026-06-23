@@ -2096,6 +2096,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                             exec();
                         }
 };
+
 class SVGStudioWelcomePage : public QWidget {
 private:
     QPushButton *newFileButton;
@@ -2112,6 +2113,8 @@ private:
     QSvgWidget *dragAnimation;
     QLabel *dragAnimationLabel;
     QMovie *dragAnimationMovie;
+    QLabel *recentFilesLabel;
+    QVBoxLayout *recentFilesLayout;
 
 public:
     SVGStudioWelcomePage(SVGStudioButtonLogic *buttonLogic,QTabWidget *tabWidget,QWidget *parent = nullptr): QWidget(parent) {
@@ -2124,9 +2127,25 @@ public:
                                                                                                                                     CreateLayouts();
                                                                                                                                     CreateConnections();
                                                                                                                                     CreateDragOverlay();
+                                                                                                                                    LoadRecentFiles();
                                                                                                                                 }
 
 private:
+    void LoadRecentFiles() {
+                                QStringList recentFiles = SVGStudioDataManager::GetRecentFiles();
+                                for(QString path:recentFiles) {
+                                                                    if(!QFile::exists(path)) {
+                                                                                                SVGStudioDataManager::RemoveRecentFile(path);
+                                                                                                continue;
+                                                                                            }
+                                                                    QPushButton *button;
+                                                                    button = new QPushButton(QFileInfo(path).fileName());
+                                                                    button->setToolTip(path);
+                                                                    button->setCursor(Qt::PointingHandCursor);
+                                                                    recentFilesLayout->addWidget(button);
+                                                                }
+                            }
+
     void CreateWidgets() {
                             // Label - Add a  Label of Welcome To The Svg  Studio
                             welcomeToTheSvgStudioLabel = new QLabel("Welcome To The SVG Studio");
@@ -2134,6 +2153,10 @@ private:
 
                             welcomePageStartLabel =new QLabel("Open, Preview and Manage SVG Files");
                             welcomePageStartLabel->setStyleSheet(Style::welcomePageStartLabelStyle());
+
+                            // Label - Recent Label
+                            recentFilesLabel = new QLabel("Recent Fles");
+                            recentFilesLayout = new QVBoxLayout();
 
                             newFileButton = new QPushButton("New File...");
                             newFileButton->setToolTip("Create New SVG File");
@@ -2176,17 +2199,22 @@ private:
 
                             QVBoxLayout *leftLayout;
                             leftLayout = new QVBoxLayout;
-
                             leftLayout->addStretch();
                             leftLayout->addWidget(newFileButton);
                             leftLayout->addWidget(openFileButton);
                             leftLayout->addWidget(openFolderButton);
                             leftLayout->addWidget(convertToSvgButton);
 
+                            QVBoxLayout *rightLayout;
+                            rightLayout = new QVBoxLayout;
+                            rightLayout->addWidget(recentFilesLabel);
+                            rightLayout->addLayout(recentFilesLayout);
+                            rightLayout->addStretch();
+
                             welcomeLayout->addWidget(welcomeToTheSvgStudioLabel);
                             welcomeLayout->addWidget(welcomePageStartLabel);
                             welcomeMainLayout->addLayout(leftLayout,1);
-                            welcomeMainLayout->addStretch();
+                            welcomeMainLayout->addLayout(rightLayout,1);
                             welcomeLayout->addLayout(welcomeMainLayout);
                             setLayout(welcomeLayout);
 
