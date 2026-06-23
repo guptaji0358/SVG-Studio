@@ -386,6 +386,56 @@ public:
                                             SaveData(data);
                                         }
 
+    // Add Recents History inside JSON Storage
+    static void AddRecentFile(QString filePath) {
+                                    QJsonObject data;
+                                    data = LoadData();
+                                    QJsonArray recentFiles;
+                                    recentFiles = data["recent_files"].toArray();
+                                    QJsonArray newRecentFiles;
+                                    newRecentFiles.append(filePath);
+                                    for (QJsonValue value:recentFiles) {
+                                                                            if (value.toString() != filePath) {
+                                                                                                                    newRecentFiles.append(value);
+                                                                                                                }
+                                                                        }
+
+                                    while (newRecentFiles.size() > 50) {
+                                                                            SaveData(data);
+                                                                        }
+                                    data["recent_files"] = newRecentFiles;
+                                    SaveData(data);
+                                }
+
+    // Get  the recent History from JSON Storage
+    static QStringList GetRecentFiles() {
+                                            QStringList result;
+                                            QJsonObject data;
+                                            data = LoadData();
+                                            QJsonArray recentFiles;
+                                            recentFiles = data["recent_files"].toArray();
+                                            for (QJsonValue value:recentFiles) {
+                                                                                    result.append(value.toString());
+                                                                                }
+                                            return result;
+                                        }
+
+    // Remove the Recent History  from JSON Storage
+    static void RemoveRecentFile(QString filePath) {
+                                                        QJsonObject data;
+                                                        data = LoadData();
+                                                        QJsonArray recentFiles;
+                                                        recentFiles = data["recent_files"].toArray();
+                                                        QJsonArray newRecentFiles;
+                                                        for (QJsonValue value:recentFiles) {
+                                                                                                if(value.toString() != filePath) {
+                                                                                                                                    newRecentFiles.append(value);
+                                                                                                                                }
+                                                                                            }
+                                                        data["recent_files"] = newRecentFiles;
+                                                        SaveData(data);
+                                                    }
+
     static bool IsRecentHistoryEnabled() {
                                             QJsonObject data = LoadData();
                                             return data["recent_history_enabled"].toBool(false);
@@ -788,6 +838,7 @@ public:
                                                                         tabWidget->addTab(editorTab, QFileInfo(filePath).fileName());
                                                                         tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
                                                                         tabWidget->setCurrentWidget(editorTab);
+                                                                        SVGStudioDataManager::AddRecentFile(filePath);
                                                                     }
 
     // Open a Existing SVG File Using Open File... Button on WelcomePage
@@ -2189,10 +2240,6 @@ protected:
                                                                                                         dragAnimationMovie->start();
                                                                                                     }
 
-                                                                                                // dragAnimationMovie->stop();
-                                                                                                // dragAnimationMovie->setFileName(FilePaths::DragDropOfOneSvgsAnimationGifPath);
-                                                                                                // dragAnimationLabel->setMovie(dragAnimationMovie);
-                                                                                                // dragAnimationMovie->start();
                                                                                                 event->acceptProposedAction();
                                                                                                 dragOverlay->show();
                                                                                             }
