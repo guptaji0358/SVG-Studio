@@ -1171,10 +1171,13 @@ public:
                                         auto qualityBestRadioButton = (QRadioButton*)nullptr;
                                         auto compareOrginalwithGnnerated = (QCheckBox*)nullptr;
                                         auto mainLayout = (QVBoxLayout*)nullptr;
+                                        auto quickPathsLayout = (QVBoxLayout*)nullptr;
+                                        auto quickPathsGroup = (QGroupBox*)nullptr;
                                         auto imageInputLayout = (QHBoxLayout*)nullptr;
                                         auto svgOutputLayout = (QHBoxLayout*)nullptr;
                                         auto qualityLayout = (QHBoxLayout*)nullptr;
                                         auto cancelAndCovertButtonLayout = (QHBoxLayout*)nullptr;
+                                        auto pathGroup = (QButtonGroup*)nullptr;
 
                                         auto CreateWidgets = [&]() {
                                                                         dialog->setWindowTitle("Convert To SVG");
@@ -1236,6 +1239,8 @@ public:
                                                                         convertButton->setCursor(Qt::PointingHandCursor);
                                                                         convertButton->setToolTip("Convert");
 
+                                                                        pathGroup = new QButtonGroup(dialog);
+                                                                        quickPathsGroup = new QGroupBox("Quick Access Paths");
                                                                         mainLayout = new QVBoxLayout(dialog);
                                                                     };
 
@@ -1249,12 +1254,34 @@ public:
                                                                         imageInputLayout->addWidget(broseButton);
                                                                         mainLayout->addLayout(imageInputLayout);
 
-                                                                        // Layout - A Horizontal Layout (Image Location + Input + Browse)
+                                                                        // Layout - A Horizontal Layout (Output Save Location + Input + Browse)
                                                                         svgOutputLayout = new QHBoxLayout;
                                                                         svgOutputLayout->addWidget(outputSvgLabel);
                                                                         svgOutputLayout->addWidget(outputSvgLineEdit);
                                                                         svgOutputLayout->addWidget(browseOutputButton);
                                                                         mainLayout->addLayout(svgOutputLayout);
+
+                                                                        quickPathsLayout = new QVBoxLayout;
+
+                                                                                                        QStringList paths;
+                                                                                                        paths = SVGStudioDataManager::GetPaths();
+                                                                                                        for(QString path : paths) {
+                                                                                                                                        QRadioButton *radio;
+                                                                                                                                        radio = new QRadioButton(path);
+                                                                                                                                        radio->setCursor(Qt::PointingHandCursor);
+                                                                                                                                        radio->setToolTip(path);
+                                                                                                                                        pathGroup->addButton(radio);
+                                                                                                                                        quickPathsLayout->addWidget(radio);
+                                                                                                                                        QObject::connect(radio,&QRadioButton::toggled,[radio, path, outputSvgLineEdit]() {
+                                                                                                                                                                                                                            if(radio->isChecked()) {
+                                                                                                                                                                                                                                                        outputSvgLineEdit->setText(path);
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                        }
+                                                                                                                                                );
+
+                                                                                                                                    }
+                                                                        quickPathsGroup->setLayout(quickPathsLayout);
+                                                                        mainLayout->addWidget(quickPathsGroup);
 
                                                                         // Layout - Horizontal  Layout (Quality + Fast + Balanced + Best)
                                                                         qualityLayout = new QHBoxLayout();
