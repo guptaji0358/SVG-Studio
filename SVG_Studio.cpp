@@ -1155,8 +1155,53 @@ public:
                                                                         }
 
     void convertToSvgButtonLogic() {
-        
-    }
+                                        auto dialog = new QDialog;
+                                        auto titleLabel = (QLabel*)nullptr;
+                                        auto imageInput = (QLineEdit*)nullptr;
+                                        auto broseButton = (QPushButton*)nullptr;
+                                        auto cancelButton = (QPushButton*)nullptr;
+                                        auto mainLayout = (QVBoxLayout*)nullptr;
+
+                                        auto CreateWidgets = [&]() {
+                                                                        dialog->setWindowTitle("Convert To SVG");
+                                                                        dialog->resize(800,600);
+
+                                                                        titleLabel = new QLabel("Convert To SVG");
+
+                                                                        // Input - Input of resourses
+                                                                        imageInput = new QLineEdit();
+
+                                                                        // Button - Browse Button
+                                                                        broseButton = new QPushButton("Brose");
+                                                                        broseButton->setCursor(Qt::PointingHandCursor);
+                                                                        broseButton->setToolTip("Cancel");
+                                                                        
+                                                                        // Button - Cancel Button
+                                                                        cancelButton = new QPushButton("Cancel");
+                                                                        cancelButton->setCursor(Qt::PointingHandCursor);
+                                                                        cancelButton->setToolTip("Cancel");
+                                                                    };
+
+                                        auto CreateLayouts = [&]() {
+                                                                        mainLayout = new QVBoxLayout(dialog);
+                                                                        mainLayout->addWidget(titleLabel);
+                                                                        mainLayout->addWidget(imageInput);
+                                                                        mainLayout->addWidget(broseButton);
+                                                                        mainLayout->addStretch();
+                                                                        mainLayout->addWidget(cancelButton);
+                                                                    };
+
+                                        auto CreateConnections = [&]() {
+                                                                            QObject::connect(cancelButton,&QPushButton::clicked,dialog,&QDialog::close);
+                                                                        };
+
+                                        CreateWidgets();
+                                        CreateLayouts();
+                                        CreateConnections();
+
+                                        dialog->exec();
+                                        delete dialog;
+                                    }
 };
 
 // Dynamic Hover Effect on card class
@@ -2002,7 +2047,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         }
                                     );
 
-                            // Call Add Path Dalog                         
+                            // Call Add Path Dalog        
                             connect(addPathButton,&QPushButton::clicked,this,[=]() {
                                                                                         ShowAddPathDialog();
                                                                                     }
@@ -2167,6 +2212,7 @@ private:
 
                                                                     QPushButton *fileButton;
                                                                     fileButton = new QPushButton(QFileInfo(path).fileName());
+                                                                    fileButton->setIcon(QIcon(FilePaths::DarkModeSvgFileICOIcon));
                                                                     fileButton->setToolTip(path);
                                                                     fileButton->setCursor(Qt::PointingHandCursor);
                                                                     fileButton->setStyleSheet(Style::recentFileNameStyle());
@@ -2219,29 +2265,48 @@ private:
                             recentFilesLabel = new QLabel("Recent Fles");
                             recentFilesLayout = new QVBoxLayout();
 
+                            // Button - New File... Button
                             newFileButton = new QPushButton("New File...");
                             newFileButton->setToolTip("Create New SVG File");
                             newFileButton->setCursor(Qt::PointingHandCursor);
                             newFileButton->setIcon(QIcon(FilePaths::newFileIconPath));
                             newFileButton->setIconSize(QSize(32,32));
                             newFileButton->setStyleSheet(Style::welcomeButtonStyle());
-                            QObject::connect(newFileButton,&QPushButton::clicked,this,[=](){buttonLogic->newFileButtonLogic(this,tabWidget);});
+                            QObject::connect(newFileButton,&QPushButton::clicked,this,[=](){
+                                                                                                buttonLogic->newFileButtonLogic(
+                                                                                                                                    this,tabWidget
+                                                                                                                                );
+                                                                                            }
+                                            );
 
+                            // Button - Open File... Button
                             openFileButton = new QPushButton("Open File...");
                             openFileButton->setToolTip("Open SVG File");
                             openFileButton->setCursor(Qt::PointingHandCursor);
                             openFileButton->setIcon(QIcon(FilePaths::openFileIconPath));
                             openFileButton->setIconSize(QSize(32,32));
                             openFileButton->setStyleSheet(Style::welcomeButtonStyle());
-                            QObject::connect(openFileButton,&QPushButton::clicked,this,[=](){buttonLogic->openFileButtonLogic(this,tabWidget);});
+                            QObject::connect(openFileButton,&QPushButton::clicked,this,[=](){
+                                                                                                buttonLogic->openFileButtonLogic(
+                                                                                                                                    this,tabWidget
+                                                                                                                                );
+                                                                                            }
+                                            );
 
+                            // Button - Open Folder... Button// Button - New File... Button
                             openFolderButton =new QPushButton("Open Folder...");
                             openFolderButton->setToolTip("Open all SVG(s) From Folder");
                             openFolderButton->setCursor(Qt::PointingHandCursor);
                             openFolderButton->setIcon(QIcon(FilePaths::openFolderIconPath));
                             openFolderButton->setIconSize(QSize(32,32));
                             openFolderButton->setStyleSheet(Style::welcomeButtonStyle());
-                            QObject::connect(openFolderButton,&QPushButton::clicked,this,[=](){buttonLogic->openFolderButtonLogic(this,tabWidget);});
+                            QObject::connect(openFolderButton,&QPushButton::clicked,this,[=](){
+                                                                                                    buttonLogic->openFolderButtonLogic(
+                                                                                                                                            this,
+                                                                                                                                            tabWidget
+                                                                                                                                        );
+                                                                                                }
+                                            );
 
                             convertToSvgButton =new QPushButton("Convert to SVG...");
                             convertToSvgButton->setToolTip("Convert to SVG File");
@@ -2249,6 +2314,10 @@ private:
                             convertToSvgButton->setIcon(QIcon(FilePaths::convertToSvgIconPath));
                             convertToSvgButton->setIconSize(QSize(32,32));
                             convertToSvgButton->setStyleSheet(Style::welcomeButtonStyle());
+                            QObject::connect(convertToSvgButton,&QPushButton::clicked,this,[=]() {
+                                                                                                    buttonLogic->convertToSvgButtonLogic();
+                                                                                                }
+                                            );
                         }
 
     void CreateLayouts() {
