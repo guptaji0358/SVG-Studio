@@ -1165,6 +1165,7 @@ public:
                                         auto broseButton = (QPushButton*)nullptr;
                                         auto browseOutputButton = (QPushButton*)nullptr;
                                         auto cancelButton = (QPushButton*)nullptr;
+                                        auto convertButton = (QPushButton*)nullptr;
                                         auto qualityFastRadioButton = (QRadioButton*)nullptr;
                                         auto qualityBalancedRadioButton = (QRadioButton*)nullptr;
                                         auto qualityBestRadioButton = (QRadioButton*)nullptr;
@@ -1173,9 +1174,7 @@ public:
                                         auto imageInputLayout = (QHBoxLayout*)nullptr;
                                         auto svgOutputLayout = (QHBoxLayout*)nullptr;
                                         auto qualityLayout = (QHBoxLayout*)nullptr;
-
-                                        /*
-☑ Show Compare Before Save*/
+                                        auto cancelAndCovertButtonLayout = (QHBoxLayout*)nullptr;
 
                                         auto CreateWidgets = [&]() {
                                                                         dialog->setWindowTitle("Convert To SVG");
@@ -1232,6 +1231,11 @@ public:
                                                                         cancelButton->setCursor(Qt::PointingHandCursor);
                                                                         cancelButton->setToolTip("Cancel");
 
+                                                                        // Button - Cancel Button
+                                                                        convertButton = new QPushButton("Convert");
+                                                                        convertButton->setCursor(Qt::PointingHandCursor);
+                                                                        convertButton->setToolTip("Convert");
+
                                                                         mainLayout = new QVBoxLayout(dialog);
                                                                     };
 
@@ -1263,7 +1267,12 @@ public:
                                                                         mainLayout->addWidget(compareOrginalwithGnnerated);
 
                                                                         mainLayout->addStretch();
-                                                                        mainLayout->addWidget(cancelButton);
+
+                                                                        cancelAndCovertButtonLayout = new QHBoxLayout();
+                                                                        cancelAndCovertButtonLayout->addStretch();
+                                                                        cancelAndCovertButtonLayout->addWidget(cancelButton);
+                                                                        cancelAndCovertButtonLayout->addWidget(convertButton);
+                                                                        mainLayout->addLayout(cancelAndCovertButtonLayout);
                                                                     };
 
                                         auto CreateConnections = [&]() {
