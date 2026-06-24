@@ -295,6 +295,17 @@ public:
                                                                     }
                                                     )";
                                     }
+
+    static QString recentFileNameStyle() {
+                                                return R"(
+                                                            QPushButton {
+                                                                            background:none;
+                                                                            color:white;
+                                                                            border:none;
+                                                                            font-weight:bold;
+                                                                        }
+                                                            )";
+                                            }
 };
 
 class SVGStudioDataManager {
@@ -401,7 +412,7 @@ public:
                                                                         }
 
                                     while (newRecentFiles.size() > 50) {
-                                                                            SaveData(data);
+                                                                            newRecentFiles.removeLast();
                                                                         }
                                     data["recent_files"] = newRecentFiles;
                                     SaveData(data);
@@ -2131,7 +2142,16 @@ public:
 
 private:
     QMap<QWidget*,QPushButton*> removeButtons;
-    void LoadRecentFiles() {
+    void LoadRecentFiles() {QLayoutItem *item;
+
+    while((item = recentFilesLayout->takeAt(0))) {
+                                                    if(item->widget()) {
+                                                                            item->widget()->deleteLater();
+                                                                        }
+
+                                                    delete item;
+                                                }
+
                                 QStringList recentFiles = SVGStudioDataManager::GetRecentFiles();
                                 for(QString path:recentFiles) {
                                                                     if(!QFile::exists(path)) {
@@ -2149,6 +2169,7 @@ private:
                                                                     fileButton = new QPushButton(QFileInfo(path).fileName());
                                                                     fileButton->setToolTip(path);
                                                                     fileButton->setCursor(Qt::PointingHandCursor);
+                                                                    fileButton->setStyleSheet(Style::recentFileNameStyle());
 
                                                                     QPushButton *removeButton;
                                                                     removeButton = new QPushButton();
@@ -2160,6 +2181,12 @@ private:
                                                                     removeButton->installEventFilter(new RemoveButtonHoverFilter(removeButton));
                                                                     removeButton->hide();
                                                                     removeButton->setStyleSheet(Style::RemoveButtonStyle());
+                                                                    QObject::connect(removeButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                        SVGStudioDataManager::RemoveRecentFile(path);
+                                                                                                                                        recentFilesLayout->removeWidget(rowWidget);
+                                                                                                                                        rowWidget->deleteLater();
+                                                                                                                                    }
+                                                                                    );
 
                                                                     rowLayout->addWidget(fileButton);
                                                                     rowLayout->addSpacing(8);
@@ -2246,11 +2273,11 @@ private:
                         }
 
     void CreateConnections() {
-        QObject::connect(openFileButton,&QPushButton::clicked,this,[=]() {
-                                                                            buttonLogic->openFileButtonLogic(this,tabWidget);
-                                                                        }
-                        );
-    }
+                                QObject::connect(openFileButton,&QPushButton::clicked,this,[=]() {
+                                                                                                    buttonLogic->openFileButtonLogic(this,tabWidget);
+                                                                                                }
+                                                );
+                            }
 
     void CreateDragOverlay() {
                                 dragOverlay = new QFrame(this);
@@ -2265,7 +2292,6 @@ private:
                                 dragOverlay->setGeometry(rect());
                                 dragOverlay->raise();
                                 dragOverlay->setStyleSheet("background-color:black;");
-
                                 dragOverlay->hide();
                             }
 
@@ -2326,19 +2352,28 @@ protected:
                                             
     // Remove Button Hide and show
     bool eventFilter(QObject *obj,QEvent *event) override {
-        QWidget *widget = qobject_cast<QWidget*>(obj);
-        if(widget && removeButtons.contains(widget)) {
-                                                            if(event->type() == QEvent::Enter) {
-                                                                                                    removeButtons[widget]->show();
-                                                                                                }
+                                                                QWidget *widget = qobject_cast<QWidget*>(obj);
+                                                                if(widget && removeButtons.contains(widget)) {
+                                                                                                                    if(event->type() == QEvent::Enter) {
+                                                                                                                                                            removeButtons[widget]->show();
+                                                                                                                                                        }
 
-                                                            if(event->type() == QEvent::Leave) {
-                                                                                                    removeButtons[widget]->hide();
-                                                                                                }
-                                                        }
+                                                                                                                    if(event->type() == QEvent::Leave) {
+                                                                                                                                                            removeButtons[widget]->hide();
+                                                                                                                                                        }
+                                                                                                                }
 
-        return QWidget::eventFilter(obj,event);
-    }
+                                                                return QWidget::eventFilter(obj,event);
+                                                            }
+
+    void showEvent(QShowEvent *event) override {
+                                                    QWidget::showEvent(event);
+                                                    LoadRecentFiles();
+                                                }
+// public:
+// void RefreshRecentFiles() {
+//                                 LoadRecentFiles();
+//                             }
 };
 
 class SVGStudioShortcuts {
@@ -2351,13 +2386,10 @@ public:
                                                                                                                                                                                             filePaths = logic->openSVG(window);
 
                                                                                                                                                                                             for(QString filePath : filePaths) {
-                                                                                                                                                                                                                                    SVGStudioEditorTab *editorTab;
-                                                                                                                                                                                                                                    editorTab = new SVGStudioEditorTab;
-
-                                                                                                                                                                                                                                    editorTab->getPreview()->load(filePath);
-                                                                                                                                                                                                                                    tabWidget->addTab(editorTab,QFileInfo(filePath).fileName());
-                                                                                                                                                                                                                                    tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
-                                                                                                                                                                                                                                    tabWidget->setCurrentWidget(editorTab);
+                                                                                                                                                                                                                                    SVGStudioButtonLogic::OpenSvgInTab(
+                                                                                                                                                                                                                                                                            filePath,
+                                                                                                                                                                                                                                                                            tabWidget
+                                                                                                                                                                                                                                                                        );
                                                                                                                                                                                                                                 }
                                                                                                                                                                                         }
                                                                                                                                             );
