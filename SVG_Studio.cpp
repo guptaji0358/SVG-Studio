@@ -1168,14 +1168,13 @@ public:
                                         auto qualityFastRadioButton = (QRadioButton*)nullptr;
                                         auto qualityBalancedRadioButton = (QRadioButton*)nullptr;
                                         auto qualityBestRadioButton = (QRadioButton*)nullptr;
+                                        auto compareOrginalwithGnnerated = (QCheckBox*)nullptr;
                                         auto mainLayout = (QVBoxLayout*)nullptr;
                                         auto imageInputLayout = (QHBoxLayout*)nullptr;
                                         auto svgOutputLayout = (QHBoxLayout*)nullptr;
                                         auto qualityLayout = (QHBoxLayout*)nullptr;
 
                                         /*
-( ) Best Quality
-
 ☑ Show Compare Before Save*/
 
                                         auto CreateWidgets = [&]() {
@@ -1222,7 +1221,12 @@ public:
                                                                         qualityBestRadioButton = new QRadioButton("fast");
                                                                         qualityBestRadioButton->setCursor(Qt::PointingHandCursor);
                                                                         qualityBestRadioButton->setToolTip("Fast");
-                                                                        
+
+                                                                        // Checkbox - Comapare Orginal with Gennerated
+                                                                        compareOrginalwithGnnerated = new QCheckBox("Compare Orginal With Results");
+                                                                        compareOrginalwithGnnerated->setToolTip("Compare Orginal With Results");
+                                                                        compareOrginalwithGnnerated->setCursor(Qt::PointingHandCursor);
+
                                                                         // Button - Cancel Button
                                                                         cancelButton = new QPushButton("Cancel");
                                                                         cancelButton->setCursor(Qt::PointingHandCursor);
@@ -1255,6 +1259,8 @@ public:
                                                                         qualityLayout->addWidget(qualityBalancedRadioButton);
                                                                         qualityLayout->addWidget(qualityBestRadioButton);
                                                                         mainLayout->addLayout(qualityLayout);
+
+                                                                        mainLayout->addWidget(compareOrginalwithGnnerated);
 
                                                                         mainLayout->addStretch();
                                                                         mainLayout->addWidget(cancelButton);
