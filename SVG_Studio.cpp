@@ -1303,6 +1303,7 @@ public:
                                                                     };
 
                                         auto CreateConnections = [&]() {
+                                                                            /// connect - cancel Button connections
                                                                             QObject::connect(cancelButton,&QPushButton::clicked,dialog,&QDialog::close);
 
                                                                             // connect - Output Browse Button connection
@@ -1312,11 +1313,93 @@ public:
                                                                                                                                                                                                                 "Select Output Folder"
                                                                                                                                                                                                             );
                                                                                                                                                         if(!folder.isEmpty()) {
+                                                                                                                                                                                    outputSvgLineEdit->setText(folder);
+                                                                                                                                                                                }
+                                                                                                                                                    }
+                                                                                                );
+                                                                        
+
+                                                                            QObject::connect(broseButton,&QPushButton::clicked,dialog,[=]() {
+                                                                                                                                                        QString folder = QFileDialog::getOpenFileName (
+                                                                                                                                                                                                            dialog,
+                                                                                                                                                                                                            "Select Image File",
+                                                                                                                                                                                                            QString(),
+                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp)"
+                                                                                                                                                                                                        );
+                                                                                                                                                        if(!folder.isEmpty()) {
                                                                                                                                                             outputSvgLineEdit->setText(folder);
                                                                                                                                                         }
                                                                                                                                                     }
                                                                                                 );
-                                                                        };
+
+                                                                            QObject::connect(convertButton,&QPushButton::clicked,dialog,[=]() {
+                                                                                                                                                QString inputPath = imageInput->text().trimmed();
+                                                                                                                                                QString outputPath = outputSvgLineEdit->text().trimmed();
+                                                                                                                                                if(inputPath.isEmpty()) {
+                                                                                                                                                                            QMessageBox::warning(
+                                                                                                                                                                                                    dialog,
+                                                                                                                                                                                                    "SVG Studio",
+                                                                                                                                                                                                    "Please select an image."
+                                                                                                                                                                                                );
+                                                                                                                                                                            return;
+                                                                                                                                                                        }
+
+                                                                                                                                                if(outputPath.isEmpty()) {
+                                                                                                                                                                            QMessageBox::warning(
+                                                                                                                                                                                                    dialog,
+                                                                                                                                                                                                    "SVG Studio",
+                                                                                                                                                                                                    "Please select an output folder."
+                                                                                                                                                                                                );
+                                                                                                                                                                                return;
+                                                                                                                                                                            }
+
+                                                                                                                                                if(!QFile::exists(inputPath)) {
+                                                                                                                                                                                    QMessageBox::warning(
+                                                                                                                                                                                                            dialog,
+                                                                                                                                                                                                            "SVG Studio",
+                                                                                                                                                                                                            "Input image does not exist."
+                                                                                                                                                                                                        );
+                                                                                                                                                                                    return;
+                                                                                                                                                                                }
+
+                                                                                                                                                QDir outputDir(outputPath);
+                                                                                                                                                if(!outputDir.exists()) {
+                                                                                                                                                                            QMessageBox::warning(
+                                                                                                                                                                                                    dialog,
+                                                                                                                                                                                                    "SVG Studio",
+                                                                                                                                                                                                    "Output folder does not exist."
+                                                                                                                                                                                                );
+                                                                                                                                                                            return;
+                                                                                                                                                                        }
+
+                                                                                                                                                QString extension = QFileInfo(inputPath).suffix().toLower();
+                                                                                                                                                QStringList supportedFormats = {
+                                                                                                                                                                                    "png",
+                                                                                                                                                                                    "jpg",
+                                                                                                                                                                                    "jpeg",
+                                                                                                                                                                                    "bmp",
+                                                                                                                                                                                    "webp",
+                                                                                                                                                                                    "ico"
+                                                                                                                                                                                };
+
+                                                                                                                                                if(!supportedFormats.contains(extension)) {
+                                                                                                                                                                                                QMessageBox::warning(
+                                                                                                                                                                                                                        dialog,
+                                                                                                                                                                                                                        "SVG Studio",
+                                                                                                                                                                                                                        "Unsupported image format."
+                                                                                                                                                                                                                    );
+                                                                                                                                                                                                return;
+                                                                                                                                                                                            }
+
+                                                                                                                                                QMessageBox::information(
+                                                                                                                                                                            dialog,
+                                                                                                                                                                            "SVG Studio",
+                                                                                                                                                                            "Validation Passed"
+                                                                                                                                                                        );
+                                                                                                                                            }
+                                                                                            );
+                                                                            };
+                                                                        
 
                                         CreateWidgets();
                                         CreateLayouts();
