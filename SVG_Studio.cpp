@@ -1157,42 +1157,123 @@ public:
     void convertToSvgButtonLogic() {
                                         auto dialog = new QDialog;
                                         auto titleLabel = (QLabel*)nullptr;
+                                        auto inputImageLabel = (QLabel*)nullptr;
+                                        auto outputSvgLabel = (QLabel*)nullptr;
+                                        auto qualityLabel = (QLabel*)nullptr;
                                         auto imageInput = (QLineEdit*)nullptr;
+                                        auto outputSvgLineEdit = (QLineEdit*)nullptr;
                                         auto broseButton = (QPushButton*)nullptr;
+                                        auto browseOutputButton = (QPushButton*)nullptr;
                                         auto cancelButton = (QPushButton*)nullptr;
+                                        auto qualityFastRadioButton = (QRadioButton*)nullptr;
+                                        auto qualityBalancedRadioButton = (QRadioButton*)nullptr;
+                                        auto qualityBestRadioButton = (QRadioButton*)nullptr;
                                         auto mainLayout = (QVBoxLayout*)nullptr;
+                                        auto imageInputLayout = (QHBoxLayout*)nullptr;
+                                        auto svgOutputLayout = (QHBoxLayout*)nullptr;
+                                        auto qualityLayout = (QHBoxLayout*)nullptr;
+
+                                        /*
+( ) Best Quality
+
+☑ Show Compare Before Save*/
 
                                         auto CreateWidgets = [&]() {
                                                                         dialog->setWindowTitle("Convert To SVG");
                                                                         dialog->resize(800,600);
 
+                                                                        // Label - Title Label
                                                                         titleLabel = new QLabel("Convert To SVG");
+
+                                                                        inputImageLabel = new QLabel("Imge Location");
 
                                                                         // Input - Input of resourses
                                                                         imageInput = new QLineEdit();
 
+                                                                        outputSvgLabel = new QLabel("Output");
+
+                                                                        outputSvgLineEdit = new QLineEdit();
+
+
                                                                         // Button - Browse Button
-                                                                        broseButton = new QPushButton("Brose");
+                                                                        broseButton = new QPushButton("Browse");
                                                                         broseButton->setCursor(Qt::PointingHandCursor);
-                                                                        broseButton->setToolTip("Cancel");
+                                                                        broseButton->setToolTip("Browse");
+
+                                                                        // Button - Output Browse Button
+                                                                        browseOutputButton = new QPushButton("Browse");
+                                                                        browseOutputButton->setCursor(Qt::PointingHandCursor);
+                                                                        browseOutputButton->setToolTip("Browse Save Location");
+
+                                                                        // Labbel -  Quality Label
+                                                                        qualityLabel = new QLabel("Quality");
+
+                                                                        // Quality -> Button - Fast Radio Button
+                                                                        qualityFastRadioButton = new QRadioButton("fast");
+                                                                        qualityFastRadioButton->setCursor(Qt::PointingHandCursor);
+                                                                        qualityFastRadioButton->setToolTip("Fast");
+                                                                        
+                                                                        // Quality -> Button - Balanced Radio Button
+                                                                        qualityBalancedRadioButton = new QRadioButton("Balanced");
+                                                                        qualityBalancedRadioButton->setCursor(Qt::PointingHandCursor);
+                                                                        qualityBalancedRadioButton->setToolTip("Balanced");
+                                                                        
+                                                                        // Quality -> Button - Fast Radio Button
+                                                                        qualityBestRadioButton = new QRadioButton("fast");
+                                                                        qualityBestRadioButton->setCursor(Qt::PointingHandCursor);
+                                                                        qualityBestRadioButton->setToolTip("Fast");
                                                                         
                                                                         // Button - Cancel Button
                                                                         cancelButton = new QPushButton("Cancel");
                                                                         cancelButton->setCursor(Qt::PointingHandCursor);
                                                                         cancelButton->setToolTip("Cancel");
+
+                                                                        mainLayout = new QVBoxLayout(dialog);
                                                                     };
 
                                         auto CreateLayouts = [&]() {
-                                                                        mainLayout = new QVBoxLayout(dialog);
                                                                         mainLayout->addWidget(titleLabel);
-                                                                        mainLayout->addWidget(imageInput);
-                                                                        mainLayout->addWidget(broseButton);
+
+                                                                        // Layout - A Horizontal Layout (Image Location + Input + Browse)
+                                                                        imageInputLayout = new QHBoxLayout;
+                                                                        imageInputLayout->addWidget(inputImageLabel);
+                                                                        imageInputLayout->addWidget(imageInput);
+                                                                        imageInputLayout->addWidget(broseButton);
+                                                                        mainLayout->addLayout(imageInputLayout);
+
+                                                                        // Layout - A Horizontal Layout (Image Location + Input + Browse)
+                                                                        svgOutputLayout = new QHBoxLayout;
+                                                                        svgOutputLayout->addWidget(outputSvgLabel);
+                                                                        svgOutputLayout->addWidget(outputSvgLineEdit);
+                                                                        svgOutputLayout->addWidget(browseOutputButton);
+                                                                        mainLayout->addLayout(svgOutputLayout);
+
+                                                                        // Layout - Horizontal  Layout (Quality + Fast + Balanced + Best)
+                                                                        qualityLayout = new QHBoxLayout();
+                                                                        qualityLayout->addWidget(qualityLabel);
+                                                                        qualityLayout->addWidget(qualityFastRadioButton);
+                                                                        qualityLayout->addWidget(qualityBalancedRadioButton);
+                                                                        qualityLayout->addWidget(qualityBestRadioButton);
+                                                                        mainLayout->addLayout(qualityLayout);
+
                                                                         mainLayout->addStretch();
                                                                         mainLayout->addWidget(cancelButton);
                                                                     };
 
                                         auto CreateConnections = [&]() {
                                                                             QObject::connect(cancelButton,&QPushButton::clicked,dialog,&QDialog::close);
+
+                                                                            // connect - Output Browse Button connection
+                                                                            QObject::connect(browseOutputButton,&QPushButton::clicked,dialog,[=]() {
+                                                                                                                                                        QString folder = QFileDialog::getExistingDirectory(
+                                                                                                                                                                                                                dialog,
+                                                                                                                                                                                                                "Select Output Folder"
+                                                                                                                                                                                                            );
+                                                                                                                                                        if(!folder.isEmpty()) {
+                                                                                                                                                            outputSvgLineEdit->setText(folder);
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                );
                                                                         };
 
                                         CreateWidgets();
