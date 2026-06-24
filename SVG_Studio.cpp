@@ -2170,6 +2170,13 @@ private:
                                                                     fileButton->setToolTip(path);
                                                                     fileButton->setCursor(Qt::PointingHandCursor);
                                                                     fileButton->setStyleSheet(Style::recentFileNameStyle());
+                                                                    QObject::connect(fileButton,&QPushButton::clicked,this,[=]() {
+                                                                                                                                        SVGStudioButtonLogic::OpenSvgInTab(
+                                                                                                                                                                                path,
+                                                                                                                                                                                tabWidget
+                                                                                                                                                                            );
+                                                                                                                                    }
+                                                                                    );
 
                                                                     QPushButton *removeButton;
                                                                     removeButton = new QPushButton();
