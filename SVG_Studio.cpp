@@ -58,58 +58,49 @@ Project - SVG Studio
 #include<QTimer>
 #include<QLocalServer>
 #include<QLocalSocket>
+#include<QProcess>
+
+// Paths Collection class
+class FilePaths {
+public:
+                    static inline const QString newFileIconPath =":/Assets/NEW_FILE_ICON.svg";
+                    static inline const QString openFileIconPath =":/Assets/OPEN_FILE_ICON.svg";
+                    static inline const QString openFolderIconPath =":/Assets/OPEN_FOLDER_ICON.svg";
+                    static inline const QString convertToSvgIconPath = ":/Assets/CONVERT_TO_SVG.svg";
+                    static inline const QString editButtonIconPath = ":/Assets/EDIT_BUTTON_ICON.svg";
+                    static inline const QString downArrowIconPath = ":/Assets/DOWN_ARROW_ICON.svg";
+                    static inline const QString rightArrowIconPath = ":/Assets/RIGHT_ARROW_ICON.svg";
+                    static inline const QString DragDropOfTwoSvgsAnimationGifPath = ":/Assets/2_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString DragDropOfOneSvgsAnimationGifPath = ":/Assets/1_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString DragDropOfMoreThanThreeSvgsAnimationGifPath = ":/Assets/3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif";
+                    static inline const QString NormalRemoveButtonIconPath = ":/Assets/NORMAL_REMOVE.svg";
+                    static inline const QString RedRemoveButtonIconPath = ":/Assets/RED_REMOVE.svg";
+                    static inline const QString GlowRedRemoveButtonIconPath = ":/Assets/GLOW_RED_REMOVE.svg";
+                    static inline const QString DarkModeSvgFileIconPath = ":/Assets/DARK_MODE_SVG_FILE_ICON.svg";
+                    static inline const QString LightModeSvgFileIconPath = ":/Assets/LIGHT_MODE_SVG_FILE_ICON.svg";
+                    static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
+                    static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
+                    static inline const QString DataFileName ="/SVGStudioData.json";
+                    static inline const QString VTracerExe = "/Tools/vtracer.exe";
+                };
 
 class SVGStudioInstanceManager {
 public:
     static inline const QString ServerName = "SVGStudioServer";
 };
 
-// Paths Collection class
-class FilePaths {
-public:
-                    static inline const QString newFileIconPath =":/NEW_FILE_ICON.svg";
-                    static inline const QString openFileIconPath =":/OPEN_FILE_ICON.svg";
-                    static inline const QString openFolderIconPath =":/OPEN_FOLDER_ICON.svg";
-                    static inline const QString convertToSvgIconPath = ":/CONVERT_TO_SVG.svg";
-                    static inline const QString editButtonIconPath = ":/EDIT_BUTTON_ICON.svg";
-                    static inline const QString downArrowIconPath = ":/DOWN_ARROW_ICON.svg";
-                    static inline const QString rightArrowIconPath = ":/RIGHT_ARROW_ICON.svg";
-                    static inline const QString DragDropOfTwoSvgsAnimationGifPath = ":/2_SVG_DRAG_DROP_ANIMATION.gif";
-                    static inline const QString DragDropOfOneSvgsAnimationGifPath = ":/1_SVG_DRAG_DROP_ANIMATION.gif";
-                    static inline const QString DragDropOfMoreThanThreeSvgsAnimationGifPath = ":/3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif";
-                    static inline const QString NormalRemoveButtonIconPath = ":/NORMAL_REMOVE.svg";
-                    static inline const QString RedRemoveButtonIconPath = ":/RED_REMOVE.svg";
-                    static inline const QString GlowRedRemoveButtonIconPath = ":/GLOW_RED_REMOVE.svg";
-                    static inline const QString DarkModeSvgFileIconPath = ":/DARK_MODE_SVG_FILE_ICON.svg";
-                    static inline const QString LightModeSvgFileIconPath = ":/LIGHT_MODE_SVG_FILE_ICON.svg";
-                    static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
-                    static inline const QString LightModeSvgFileICOIcon ="LIGHT_MODE_SVG_FILE_ICON.ico";
-                    static inline const QString DataFileName ="/SVGStudioData.json";
-                };
-
 // Apply ICO in File Explorer
 class ExplorerIconManager {
 public:
     static void ApplySvgIcon(const QString& icoPath) {
-                                                        QSettings svgClass(
-                                                                                "HKEY_CURRENT_USER\\Software\\Classes\\.svg",
-                                                                                QSettings::NativeFormat
-                                                                            );
+                                                        QSettings svgClass("HKEY_CURRENT_USER\\Software\\Classes\\.svg",QSettings::NativeFormat);
                                                         svgClass.setValue(".", "SVGStudio.svg");
                                                         QSettings defaultIcon(
                                                                                 "HKEY_CURRENT_USER\\Software\\Classes\\SVGStudio.svg\\DefaultIcon",
                                                                                 QSettings::NativeFormat
                                                                             );
                                                         defaultIcon.setValue(".", QDir::toNativeSeparators(icoPath));
-
-                                                        SHChangeNotify(
-                                                                            SHCNE_ASSOCCHANGED,
-                                                                            SHCNF_IDLIST,
-                                                                            nullptr,
-                                                                            nullptr
-                                                                        );
-
-                                                        // system("ie4uinit.exe -show");
+                                                        SHChangeNotify(SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);
                                                     }
 
     static void ApplyDarkIcon() {
@@ -1129,7 +1120,6 @@ public:
                                                                         CreateWidgets();
                                                                         CreateLayouts();
                                                                         CreateConnections();
-
                                                                         dialog.exec();
                                                                     }
 
@@ -1220,9 +1210,9 @@ public:
                                                                         qualityBalancedRadioButton->setToolTip("Balanced");
                                                                         
                                                                         // Quality -> Button - Fast Radio Button
-                                                                        qualityBestRadioButton = new QRadioButton("fast");
+                                                                        qualityBestRadioButton = new QRadioButton("Best");
                                                                         qualityBestRadioButton->setCursor(Qt::PointingHandCursor);
-                                                                        qualityBestRadioButton->setToolTip("Fast");
+                                                                        qualityBestRadioButton->setToolTip("Best");
 
                                                                         // Checkbox - Comapare Orginal with Gennerated
                                                                         compareOrginalwithGnnerated = new QCheckBox("Compare Orginal With Results");
@@ -1324,11 +1314,11 @@ public:
                                                                                                                                                                                                             dialog,
                                                                                                                                                                                                             "Select Image File",
                                                                                                                                                                                                             QString(),
-                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp)"
+                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.ico)"
                                                                                                                                                                                                         );
                                                                                                                                                         if(!folder.isEmpty()) {
-                                                                                                                                                            outputSvgLineEdit->setText(folder);
-                                                                                                                                                        }
+                                                                                                                                                                                    imageInput->setText(folder);
+                                                                                                                                                                                }
                                                                                                                                                     }
                                                                                                 );
 
@@ -1391,11 +1381,18 @@ public:
                                                                                                                                                                                                 return;
                                                                                                                                                                                             }
 
-                                                                                                                                                QMessageBox::information(
-                                                                                                                                                                            dialog,
-                                                                                                                                                                            "SVG Studio",
-                                                                                                                                                                            "Validation Passed"
-                                                                                                                                                                        );
+                                                                                                                                                QString quality = "Balanced";
+                                                                                                                                                if(qualityFastRadioButton->isChecked()) {
+                                                                                                                                                                                            quality = "Fast";
+                                                                                                                                                                                        }
+                                                                                                                                                else if(qualityBestRadioButton->isChecked()) {
+                                                                                                                                                                                                quality = "Best";
+                                                                                                                                                                                            }
+                                                                                                                                                RunVTracer(
+                                                                                                                                                            imageInput->text(),
+                                                                                                                                                            outputSvgLineEdit->text(),
+                                                                                                                                                            quality
+                                                                                                                                                        );
                                                                                                                                             }
                                                                                             );
                                                                             };
@@ -1408,6 +1405,52 @@ public:
                                         dialog->exec();
                                         delete dialog;
                                     }
+
+    // Run VTracer conversion
+    void RunVTracer(QString inputImage,QString outputFolder,QString quality) {
+                                                                                QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
+                                                                                    QString outputFile = outputFolder + "/" +QFileInfo(inputImage).completeBaseName() + ".svg";
+                                                                                    QString preset = "photo";
+                                                                                    if(quality == "Fast") {
+                                                                                                            preset = "poster";
+                                                                                                        }
+                                                                                    else if(quality == "Balanced") {
+                                                                                                                        preset = "photo";
+                                                                                                                    }
+                                                                                    else if(quality == "Best") {
+                                                                                                                    preset = "photo";
+                                                                                                                }
+                                                                                    QStringList arguments;
+                                                                                    arguments<<"--input"<<inputImage<<"--output"<<outputFile<<"--preset"<<preset;
+
+                                                                                    QProcess process;
+                                                                                    process.start(program,arguments);
+                                                                                    process.waitForFinished(-1);
+
+                                                                                    if(process.exitStatus() != QProcess::NormalExit) {
+                                                                                                                                        QMessageBox::critical(
+                                                                                                                                                                nullptr,
+                                                                                                                                                                "SVG Studio",
+                                                                                                                                                                "Failed to start VTracer."
+                                                                                                                                                            );
+                                                                                                                                        return;
+                                                                                                                                    }
+
+                                                                                    if(process.exitCode() != 0) {
+                                                                                                                    QMessageBox::critical(
+                                                                                                                                            nullptr,
+                                                                                                                                            "SVG Studio",
+                                                                                                                                            process.readAllStandardError()
+                                                                                                                                        );
+                                                                                                                    return;
+                                                                                                                }
+
+                                                                                    QMessageBox::information(
+                                                                                                                nullptr,
+                                                                                                                "SVG Studio",
+                                                                                                                "SVG created successfully."
+                                                                                                            );
+                                                                            }
 };
 
 // Dynamic Hover Effect on card class

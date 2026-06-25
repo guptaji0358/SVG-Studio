@@ -23,22 +23,22 @@ qt_add_executable(SVGStudio WIN32
 qt_add_resources(SVGStudio app_resources
     PREFIX "/"
     FILES
-        NEW_FILE_ICON.svg
-        OPEN_FILE_ICON.svg
-        OPEN_FOLDER_ICON.svg
-        CONVERT_TO_SVG.svg
-        EDIT_BUTTON_ICON.svg
-        DOWN_ARROW_ICON.svg
-        RIGHT_ARROW_ICON.svg
-        1_SVG_DRAG_DROP_ANIMATION.gif
-        2_SVG_DRAG_DROP_ANIMATION.gif
-        3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif
-        NORMAL_REMOVE.svg
-        RED_REMOVE.svg
-        GLOW_RED_REMOVE.svg
-        DARK_MODE_SVG_FILE_ICON.svg
-        LIGHT_MODE_SVG_FILE_ICON.svg
-        LIGHT_MODE_SVG_FILE_ICON.svg
+        Assets/NEW_FILE_ICON.svg
+        Assets/OPEN_FILE_ICON.svg
+        Assets/OPEN_FOLDER_ICON.svg
+        Assets/CONVERT_TO_SVG.svg
+        Assets/EDIT_BUTTON_ICON.svg
+        Assets/DOWN_ARROW_ICON.svg
+        Assets/RIGHT_ARROW_ICON.svg
+        Assets/1_SVG_DRAG_DROP_ANIMATION.gif
+        Assets/2_SVG_DRAG_DROP_ANIMATION.gif
+        Assets/3_AND_MORE_SVG_DRAG_DROP_ANIMATION.gif
+        Assets/NORMAL_REMOVE.svg
+        Assets/RED_REMOVE.svg
+        Assets/GLOW_RED_REMOVE.svg
+        Assets/DARK_MODE_SVG_FILE_ICON.svg
+        Assets/LIGHT_MODE_SVG_FILE_ICON.svg
+        Assets/LIGHT_MODE_SVG_FILE_ICON.svg
         DARK_MODE_SVG_FILE_ICON.ico
         LIGHT_MODE_SVG_FILE_ICON.ico
 )
