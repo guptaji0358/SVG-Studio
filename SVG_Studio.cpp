@@ -2598,10 +2598,6 @@ private:
                         }
 
     void CreateConnections() {
-                                QObject::connect(openFileButton,&QPushButton::clicked,this,[=]() {
-                                                                                                    buttonLogic->openFileButtonLogic(this,tabWidget);
-                                                                                                }
-                                                );
                             }
 
     void CreateDragOverlay() {
@@ -2695,10 +2691,6 @@ protected:
                                                     QWidget::showEvent(event);
                                                     LoadRecentFiles();
                                                 }
-// public:
-// void RefreshRecentFiles() {
-//                                 LoadRecentFiles();
-//                             }
 };
 
 class SVGStudioShortcuts {

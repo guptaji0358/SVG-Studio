@@ -8,10 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(
     Qt6 REQUIRED
     COMPONENTS
-    Widgets
-    SvgWidgets
-    Network
+        Widgets
+        SvgWidgets
+        Network
 )
+
+find_package(OpenCV REQUIRED)
 
 qt_standard_project_setup()
 
@@ -47,6 +49,7 @@ target_link_libraries(SVGStudio PRIVATE
     Qt6::Widgets
     Qt6::SvgWidgets
     Qt6::Network
+    ${OpenCV_LIBS}
 )
 
 set_target_properties(SVGStudio PROPERTIES
