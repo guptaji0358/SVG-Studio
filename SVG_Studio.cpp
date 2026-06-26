@@ -59,6 +59,7 @@ Project - SVG Studio
 #include<QLocalServer>
 #include<QLocalSocket>
 #include<QProcess>
+#include <opencv2/opencv.hpp>
 
 // Paths Collection class
 class FilePaths {
@@ -817,6 +818,72 @@ public:
                                                 QFileInfo info(path);
                                                 return info.isAbsolute();
                                             }
+
+    // FIX: Prepare image before VTracer
+    QString PrepareImageForTracing(const QString& inputImage,const QString& quality) {
+                                                                                    Q_UNUSED(quality);
+
+                                                                                    // Load Image
+                                                                                    cv::Mat image = cv::imread(inputImage.toStdString(),cv::IMREAD_UNCHANGED);
+
+                                                                                    if (image.empty()) {
+                                                                                                            return inputImage;
+                                                                                                        }
+
+                                                                                    // Convert BGRA -> BGR
+                                                                                    if (image.channels() == 4) {
+                                                                                                                    cv::cvtColor(image, image, cv::COLOR_BGRA2BGR);
+                                                                                                                }
+
+                                                                                    // CLAHE Contrast Enhancement
+                                                                                    cv::Mat lab;
+                                                                                    cv::cvtColor(image, lab, cv::COLOR_BGR2Lab);
+                                                                                    std::vector<cv::Mat> channels;
+                                                                                    cv::split(lab, channels);
+                                                                                    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(2.5, cv::Size(8,8));
+                                                                                    clahe->apply(channels[0], channels[0]);
+                                                                                    cv::merge(channels, lab);
+                                                                                    cv::cvtColor(lab, image, cv::COLOR_Lab2BGR);
+
+                                                                                    // Edge Preserving Filter
+                                                                                    cv::Mat edgeImage;
+                                                                                    cv::edgePreservingFilter(image,edgeImage,cv::RECURS_FILTER,60,0.4f);
+                                                                                    image = edgeImage;
+
+                                                                                    // 4× Upscale
+                                                                                    cv::Mat upscale;
+                                                                                    cv::resize(
+                                                                                                    image,
+                                                                                                    upscale,
+                                                                                                    cv::Size(),
+                                                                                                    4.0,
+                                                                                                    4.0,
+                                                                                                    cv::INTER_LANCZOS4
+                                                                                                );
+
+                                                                                    // Unsharp Mask
+                                                                                    cv::Mat blur;
+                                                                                    cv::GaussianBlur(upscale,blur,cv::Size(),1.5);
+                                                                                    cv::addWeighted(upscale,1.5,blur,-0.5,0,upscale);
+
+                                                                                    // Bilateral Filter
+                                                                                    cv::Mat bilateralImage;
+                                                                                    cv::bilateralFilter(
+                                                                                                            upscale,
+                                                                                                            bilateralImage,
+                                                                                                            9,
+                                                                                                            50,
+                                                                                                            50
+                                                                                                        );
+                                                                                    upscale = bilateralImage;
+
+                                                                                    // Save Temporary PNG
+                                                                                    QString tempFile = QDir::tempPath() + "/SVGStudio_Preprocessed.png";
+
+                                                                                    cv::imwrite(tempFile.toStdString(), upscale);
+
+                                                                                    return tempFile;
+                                                                                }
 };
 
 class SVGStudioButtonLogic {
@@ -1408,20 +1475,48 @@ public:
 
     // Run VTracer conversion
     void RunVTracer(QString inputImage,QString outputFolder,QString quality) {
-                                                                                QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
-                                                                                    QString outputFile = outputFolder + "/" +QFileInfo(inputImage).completeBaseName() + ".svg";
+                                                                                    QMessageBox::information(nullptr,"Debug","Before Prepare");
+                                                                                    inputImage = logic.PrepareImageForTracing(inputImage, quality);
+                                                                                    QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
+                                                                                    QString outputFile = outputFolder + "/" + QFileInfo(inputImage).completeBaseName() + ".svg";
                                                                                     QString preset = "photo";
-                                                                                    if(quality == "Fast") {
-                                                                                                            preset = "poster";
-                                                                                                        }
-                                                                                    else if(quality == "Balanced") {
-                                                                                                                        preset = "photo";
-                                                                                                                    }
-                                                                                    else if(quality == "Best") {
-                                                                                                                    preset = "photo";
-                                                                                                                }
+
                                                                                     QStringList arguments;
-                                                                                    arguments<<"--input"<<inputImage<<"--output"<<outputFile<<"--preset"<<preset;
+                                                                                    arguments
+                                                                                                << "--input" << inputImage
+                                                                                                << "--output" << outputFile
+                                                                                                << "--mode" << "spline";
+
+                                                                                    if (quality == "Fast") {
+                                                                                                                arguments
+                                                                                                                    <<"--filter_speckle"<<"8"
+                                                                                                                    <<"--color_precision"<<"6"
+                                                                                                                    <<"--gradient_step"<<"8"
+                                                                                                                    <<"--corner_threshold"<<"80"
+                                                                                                                    <<"--segment_length"<<"8"
+                                                                                                                    <<"--splice_threshold"<<"45"
+                                                                                                                    <<"--path_precision"<<"2";
+                                                                                                            }
+                                                                                    else if (quality == "Balanced") {
+                                                                                                                        arguments
+                                                                                                                            <<"--filter_speckle"<<"4"
+                                                                                                                            <<"--color_precision"<<"8"
+                                                                                                                            <<"--gradient_step"<<"4"
+                                                                                                                            <<"--corner_threshold"<<"10"
+                                                                                                                            <<"--segment_length"<<"5"
+                                                                                                                            <<"--splice_threshold"<<"30"
+                                                                                                                            <<"--path_precision"<<"4";
+                                                                                                                    }
+                                                                                    else if (quality == "Best") {
+                                                                                                                    arguments
+                                                                                                                        <<"--filter_speckle"<<"1"
+                                                                                                                        <<"--color_precision"<<"8"
+                                                                                                                        <<"--gradient_step"<<"1"
+                                                                                                                        <<"--corner_threshold"<<"175"
+                                                                                                                        << "--segment_length" << "3.5"
+                                                                                                                        <<"--splice_threshold"<<"10"
+                                                                                                                        <<"--path_precision"<<"8";
+                                                                                                                }
 
                                                                                     QProcess process;
                                                                                     process.start(program,arguments);
