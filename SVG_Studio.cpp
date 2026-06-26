@@ -1905,8 +1905,10 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
+
                                     QStringList savedPaths;
                                     savedPaths = SVGStudioDataManager::GetPaths();
+
                                     for(QString path : savedPaths) {
                                                                         // RadioButton - Path Radio Button
                                                                         QRadioButton *pathRadio;
@@ -2495,10 +2497,10 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                             connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
                                                                                                             SVGStudioDataManager::SetRecentHistoryEnabled(checked);
                                                                                                             if(checked) {
-                                                                                                                            recentHistoryStatusLabel->setText("Disable Recent History collectable");
+                                                                                                                            recentHistoryStatusLabel->setText("Do Not Collect Recent History");
                                                                                                                         }
                                                                                                             else {
-                                                                                                                    recentHistoryStatusLabel->setText("Enable Recent History Collectable");
+                                                                                                                    recentHistoryStatusLabel->setText("Collect Recent History");
                                                                                                                 }
                                                                                                         }
                                     );
