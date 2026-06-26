@@ -79,6 +79,7 @@ public:
                     static inline const QString GlowRedRemoveButtonIconPath = ":/Assets/GLOW_RED_REMOVE.svg";
                     static inline const QString DarkModeSvgFileIconPath = ":/Assets/DARK_MODE_SVG_FILE_ICON.svg";
                     static inline const QString LightModeSvgFileIconPath = ":/Assets/LIGHT_MODE_SVG_FILE_ICON.svg";
+                    static inline const QString progressLoaderAnimationPath = ":/Assets/PROGRESS_LOADER.gif";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
                     static inline const QString DataFileName ="/SVGStudioData.json";
@@ -1475,8 +1476,32 @@ public:
 
     // Run VTracer conversion
     void RunVTracer(QString inputImage,QString outputFolder,QString quality) {
-                                                                                    QMessageBox::information(nullptr,"Debug","Before Prepare");
+                                                                                    QDialog loadingDialog;
+                                                                                    loadingDialog.setWindowTitle("SVG Studio");
+                                                                                    loadingDialog.setModal(true);
+                                                                                    loadingDialog.setFixedSize(420,420);
+
+                                                                                    QVBoxLayout *layout = new QVBoxLayout(&loadingDialog);
+                                                                                    QLabel *loader = new QLabel();
+                                                                                    loader->setMinimumSize(320,320);
+                                                                                    loader->setAlignment(Qt::AlignCenter);
+
+                                                                                    QMovie *movie = new QMovie(FilePaths::progressLoaderAnimationPath);
+                                                                                    movie->setScaledSize(QSize(320,320));
+                                                                                    loader->setMovie(movie);
+                                                                                    movie->start();
+
+                                                                                    QLabel *text = new QLabel("Converting Image...");
+                                                                                    text->setAlignment(Qt::AlignCenter);
+                                                                                    layout->addStretch();
+                                                                                    layout->addWidget(loader,0,Qt::AlignCenter);
+                                                                                    layout->addSpacing(5);
+                                                                                    layout->addWidget(text);
+                                                                                    layout->addStretch();
+                                                                                    loadingDialog.show();
+                                                                                    QApplication::processEvents();
                                                                                     inputImage = logic.PrepareImageForTracing(inputImage, quality);
+
                                                                                     QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
                                                                                     QString outputFile = outputFolder + "/" + QFileInfo(inputImage).completeBaseName() + ".svg";
                                                                                     QString preset = "photo";
@@ -1520,8 +1545,11 @@ public:
 
                                                                                     QProcess process;
                                                                                     process.start(program,arguments);
-                                                                                    process.waitForFinished(-1);
+                                                                                    while (!process.waitForFinished(50)) {
+                                                                                                                                QApplication::processEvents();
+                                                                                                                            }
 
+                                                                                    loadingDialog.close();
                                                                                     if(process.exitStatus() != QProcess::NormalExit) {
                                                                                                                                         QMessageBox::critical(
                                                                                                                                                                 nullptr,
@@ -1531,6 +1559,7 @@ public:
                                                                                                                                         return;
                                                                                                                                     }
 
+                                                                                    loadingDialog.close();
                                                                                     if(process.exitCode() != 0) {
                                                                                                                     QMessageBox::critical(
                                                                                                                                             nullptr,
@@ -1540,6 +1569,7 @@ public:
                                                                                                                     return;
                                                                                                                 }
 
+                                                                                    loadingDialog.close();
                                                                                     QMessageBox::information(
                                                                                                                 nullptr,
                                                                                                                 "SVG Studio",
@@ -2689,7 +2719,6 @@ private:
                             welcomeMainLayout->addLayout(rightLayout,1);
                             welcomeLayout->addLayout(welcomeMainLayout);
                             setLayout(welcomeLayout);
-
                         }
 
     void CreateConnections() {
