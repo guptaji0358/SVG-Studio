@@ -909,7 +909,9 @@ public:
                                                                         tabWidget->addTab(editorTab, QFileInfo(filePath).fileName());
                                                                         tabWidget->setTabToolTip(tabWidget->indexOf(editorTab),filePath);
                                                                         tabWidget->setCurrentWidget(editorTab);
-                                                                        SVGStudioDataManager::AddRecentFile(filePath);
+                                                                        if(SVGStudioDataManager::IsRecentHistoryEnabled()) {
+                                                                                                                                SVGStudioDataManager::AddRecentFile(filePath);
+                                                                                                                            }
                                                                     }
 
     // Open a Existing SVG File Using Open File... Button on WelcomePage
@@ -1795,16 +1797,16 @@ public:
                             }
 
 void SetupRemoveButtonStates(QPushButton* removeButton) {
-    connect(removeButton,&QPushButton::pressed,this,[=]() {
-                                                                removeButton->setIcon(QIcon(FilePaths::GlowRedRemoveButtonIconPath));
-                                                        }
-            );
+                                                            connect(removeButton,&QPushButton::pressed,this,[=]() {
+                                                                                                                        removeButton->setIcon(QIcon(FilePaths::GlowRedRemoveButtonIconPath));
+                                                                                                                }
+                                                                    );
 
-    connect(removeButton,&QPushButton::released,this,[=]() {
-                                                                removeButton->setIcon(QIcon(FilePaths::RedRemoveButtonIconPath));
-                                                            }
-            );
-}
+                                                            connect(removeButton,&QPushButton::released,this,[=]() {
+                                                                                                                        removeButton->setIcon(QIcon(FilePaths::RedRemoveButtonIconPath));
+                                                                                                                    }
+                                                                    );
+                                                        }
 
     SVGStudioSettingsDialogLogic(QWidget *parent = nullptr):QDialog(parent) {
                                                                                     settingsTabs = new QTabWidget;
@@ -1901,11 +1903,6 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     savedPathsLayout = new QVBoxLayout;
                                     recentHistoryLayout = new QHBoxLayout;
 
-                                    // // Scroll Bar 
-                                    // scrollArea = new QScrollArea;
-                                    // scrollArea->setWidgetResizable(true);
-                                    // scrollArea->setWidget(customizeTab);
-
                                     pathGroup = new QButtonGroup(this);
                                     pathGroup->setExclusive(true);
                                     QStringList savedPaths;
@@ -1986,10 +1983,10 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                         SVGStudioDataManager::IsRecentHistoryEnabled()
                                                                     );
                                     if(recentHistoryToggle->IsChecked()) {
-                                                                                recentHistoryStatusLabel->setText("Disable Recent History Collectable");
+                                                                                recentHistoryStatusLabel->setText("Do Not Collect Recent History");
                                                                             }
                                     else {
-                                                recentHistoryStatusLabel->setText("Enable Recent History Collectable");
+                                                recentHistoryStatusLabel->setText("Collect Recent History");
                                             }
 
                                     // Button - Add Path Button
