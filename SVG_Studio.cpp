@@ -1460,7 +1460,8 @@ public:
                                                                                                                                                 RunVTracer(
                                                                                                                                                             imageInput->text(),
                                                                                                                                                             outputSvgLineEdit->text(),
-                                                                                                                                                            quality
+                                                                                                                                                            quality,
+                                                                                                                                                            compareOrginalwithGnnerated->isChecked()
                                                                                                                                                         );
                                                                                                                                             }
                                                                                             );
@@ -1476,7 +1477,7 @@ public:
                                     }
 
     // Run VTracer conversion
-    void RunVTracer(QString inputImage,QString outputFolder,QString quality) {
+    void RunVTracer(QString inputImage,QString outputFolder,QString quality,bool compareResult) {
                                                                                     QDialog loadingDialog;
                                                                                     loadingDialog.setWindowFlags(
                                                                                                                     Qt::Dialog |
@@ -1574,6 +1575,15 @@ public:
                                                                                                                 }
 
                                                                                     loadingDialog.close();
+
+                                                                                    if(compareResult) {
+                                                                                                            ShowCompareWindow(
+                                                                                                                                inputImage,
+                                                                                                                                tempSvg,
+                                                                                                                                outputFolder
+                                                                                                                            );
+                                                                                                            return;
+                                                                                                        }
                                                                                     QDialog successDialog;
                                                                                     successDialog.setWindowFlags(
                                                                                                                     Qt::Dialog |
@@ -1607,6 +1617,33 @@ public:
 
                                                                                     successDialog.exec();
                                                                             }
+
+    // Compare Dialog
+    void ShowCompareWindow(QString originalImage,QString tempSvg,QString outputFolder) {
+                                                                                            QDialog dialog;
+                                                                                            dialog.setWindowTitle("Compare");
+                                                                                            dialog.resize(1200,700);
+                                                                                            QHBoxLayout *mainLayout = new QHBoxLayout(&dialog);
+
+                                                                                            QLabel *original = new QLabel();
+                                                                                            original->setAlignment(Qt::AlignCenter);
+                                                                                            original->setPixmap(
+                                                                                                                    QPixmap(originalImage).scaled(
+                                                                                                                                                    550,
+                                                                                                                                                    650,
+                                                                                                                                                    Qt::KeepAspectRatio,
+                                                                                                                                                    Qt::SmoothTransformation
+                                                                                                                                                )
+                                                                                                                );
+
+                                                                                            QSvgWidget *svg = new QSvgWidget(tempSvg);
+                                                                                            svg->setMinimumSize(550,650);
+
+                                                                                            mainLayout->addWidget(original);
+                                                                                            mainLayout->addWidget(svg);
+                                                                                            dialog.exec();
+                                                                                            QFile::remove(tempSvg);
+                                                                                        }
 };
 
 // Dynamic Hover Effect on card class
