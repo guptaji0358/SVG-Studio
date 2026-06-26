@@ -80,6 +80,7 @@ public:
                     static inline const QString DarkModeSvgFileIconPath = ":/Assets/DARK_MODE_SVG_FILE_ICON.svg";
                     static inline const QString LightModeSvgFileIconPath = ":/Assets/LIGHT_MODE_SVG_FILE_ICON.svg";
                     static inline const QString progressLoaderAnimationPath = ":/Assets/PROGRESS_LOADER.gif";
+                    static inline const QString successAnimationPath = ":/Assets/SUCCESS.gif";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
                     static inline const QString DataFileName ="/SVGStudioData.json";
@@ -1477,9 +1478,12 @@ public:
     // Run VTracer conversion
     void RunVTracer(QString inputImage,QString outputFolder,QString quality) {
                                                                                     QDialog loadingDialog;
-                                                                                    loadingDialog.setWindowTitle("SVG Studio");
+                                                                                    loadingDialog.setWindowFlags(
+                                                                                                                    Qt::Dialog |
+                                                                                                                    Qt::FramelessWindowHint
+                                                                                                                );
                                                                                     loadingDialog.setModal(true);
-                                                                                    loadingDialog.setFixedSize(420,420);
+                                                                                    loadingDialog.setFixedSize(320,320);
 
                                                                                     QVBoxLayout *layout = new QVBoxLayout(&loadingDialog);
                                                                                     QLabel *loader = new QLabel();
@@ -1503,13 +1507,13 @@ public:
                                                                                     inputImage = logic.PrepareImageForTracing(inputImage, quality);
 
                                                                                     QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
-                                                                                    QString outputFile = outputFolder + "/" + QFileInfo(inputImage).completeBaseName() + ".svg";
+                                                                                    QString tempSvg = QDir::tempPath() + "/SVGStudio_Temp.svg";
                                                                                     QString preset = "photo";
 
                                                                                     QStringList arguments;
                                                                                     arguments
                                                                                                 << "--input" << inputImage
-                                                                                                << "--output" << outputFile
+                                                                                                << "--output" << tempSvg
                                                                                                 << "--mode" << "spline";
 
                                                                                     if (quality == "Fast") {
@@ -1570,11 +1574,38 @@ public:
                                                                                                                 }
 
                                                                                     loadingDialog.close();
-                                                                                    QMessageBox::information(
-                                                                                                                nullptr,
-                                                                                                                "SVG Studio",
-                                                                                                                "SVG created successfully."
-                                                                                                            );
+                                                                                    QDialog successDialog;
+                                                                                    successDialog.setWindowFlags(
+                                                                                                                    Qt::Dialog |
+                                                                                                                    Qt::FramelessWindowHint
+                                                                                                                );
+
+                                                                                    successDialog.setModal(true);
+                                                                                    successDialog.setFixedSize(360,320);
+                                                                                    QVBoxLayout *successLayout = new QVBoxLayout(&successDialog);
+                                                                                    QLabel *successGif = new QLabel();
+                                                                                    successGif->setAlignment(Qt::AlignCenter);
+
+                                                                                    QMovie *successMovie = new QMovie(":/Assets/SUCCESS.gif");
+                                                                                    successMovie->setScaledSize(QSize(180,180));
+                                                                                    successGif->setMovie(successMovie);
+                                                                                    successMovie->start();
+
+                                                                                    // Disappear the window after 2 seconds
+                                                                                    QTimer::singleShot(5000,&successDialog,&QDialog::accept);
+
+                                                                                    QLabel *successText = new QLabel("SVG Created Successfully!");
+                                                                                    successText->setAlignment(Qt::AlignCenter);
+                                                                                    successText->setStyleSheet("font-size:18px;""font-weight:bold;""color:white;");
+
+                                                                                    successLayout->addStretch();
+                                                                                    successLayout->addWidget(successGif,0,Qt::AlignCenter);
+                                                                                    successLayout->addSpacing(10);
+                                                                                    successLayout->addWidget(successText);
+                                                                                    successLayout->addSpacing(15);
+                                                                                    successLayout->addStretch();
+
+                                                                                    successDialog.exec();
                                                                             }
 };
 
