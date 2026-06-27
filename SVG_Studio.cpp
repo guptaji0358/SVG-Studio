@@ -406,7 +406,8 @@ public:
                                                                                                                 }
                                                                         }
 
-                                    while (newRecentFiles.size() > 50) {
+                                    const int maximumFiles = GetMaximumRecentHistory();
+                                    while (newRecentFiles.size() > maximumFiles) {
                                                                             newRecentFiles.removeLast();
                                                                         }
                                     data["recent_files"] = newRecentFiles;
@@ -447,6 +448,19 @@ public:
                                             return data["recent_history_enabled"].toBool(false);
                                         }
 
+    // FIX: Get Maximum Recent History
+    static int GetMaximumRecentHistory() {
+                                            QJsonObject data = LoadData();
+                                            return data["maximum_recent_history"].toInt(50);
+                                        }
+
+    // FIX: Save Maximum Recent History
+    static void SetMaximumRecentHistory(int value) {
+                                                        QJsonObject data = LoadData();
+                                                        data["maximum_recent_history"] = value;
+                                                        SaveData(data);
+                                                    }
+
     static void SetRecentHistoryEnabled(bool enabled) {
                                                             QJsonObject data = LoadData();
                                                             data["recent_history_enabled"] = enabled;
@@ -486,6 +500,18 @@ public:
                                                             data["default_svg_app_enabled"] = enabled;
                                                             SaveData(data);
                                                         }
+
+    // static int GetMaximumRecentHistory() {
+    //                                             QJsonObject settings = LoadSettings();
+    //                                             return settings.value("MaximumRecentHistory").toInt(50);
+    //                                         }
+
+    // // FIX: Save Maximum Recent History
+    // static void SetMaximumRecentHistory(int value) {
+    //                                                     QJsonObject settings = LoadSettings();
+    //                                                     settings["MaximumRecentHistory"] = value;
+    //                                                     SaveSettings(settings);
+    //                                                 }
 };
 
 // Toogle ON/OFF
@@ -2023,7 +2049,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                             }
                                                                         );
 
-                                    maximumRecentHistoryCombo->setCurrentText("50");
+                                    maximumRecentHistoryCombo->setCurrentText(QString::number(SVGStudioDataManager::GetMaximumRecentHistory()));
                                     recentHistoryToggle = new SVGStudioToggle;
                                     recentHistoryToggle->SetChecked(SVGStudioDataManager::IsRecentHistoryEnabled());
                                     maximumRecentHistoryCombo->setEnabled(recentHistoryToggle->IsChecked());
@@ -2617,13 +2643,15 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         }
                                     );
                             
-                            connect(maximumRecentHistoryCombo,&QComboBox::currentTextChanged,this,[&](const QString &value) {
-                                                                                                                                    if(value == "Custom...") {
-                                                                                                                                                                    return;
-                                                                                                                                                                }
+                            connect(maximumRecentHistoryCombo,&QComboBox::currentTextChanged,this,[&](const QString &text) {
+                                                                                                                                if(text == "Custom...") {
+                                                                                                                                                            return;
+                                                                                                                                                        }
 
-                                                                                                                                    qDebug()<<"Maximum Recent History:"<<value;
-                                                                                                                                }
+                                                                                                                                SVGStudioDataManager::SetMaximumRecentHistory(
+                                                                                                                                                                                text.toInt()
+                                                                                                                                                                            );
+                                                                                                                            }
                                     );
 
                             connect(defaultSvgAppToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
