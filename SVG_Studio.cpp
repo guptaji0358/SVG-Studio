@@ -500,18 +500,6 @@ public:
                                                             data["default_svg_app_enabled"] = enabled;
                                                             SaveData(data);
                                                         }
-
-    // static int GetMaximumRecentHistory() {
-    //                                             QJsonObject settings = LoadSettings();
-    //                                             return settings.value("MaximumRecentHistory").toInt(50);
-    //                                         }
-
-    // // FIX: Save Maximum Recent History
-    // static void SetMaximumRecentHistory(int value) {
-    //                                                     QJsonObject settings = LoadSettings();
-    //                                                     settings["MaximumRecentHistory"] = value;
-    //                                                     SaveSettings(settings);
-    //                                                 }
 };
 
 // Toogle ON/OFF
@@ -2645,12 +2633,43 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                             
                             connect(maximumRecentHistoryCombo,&QComboBox::currentTextChanged,this,[&](const QString &text) {
                                                                                                                                 if(text == "Custom...") {
+                                                                                                                                                            bool ok = false;
+                                                                                                                                                            int value = QInputDialog::getInt(
+                                                                                                                                                                                                this,
+                                                                                                                                                                                                "Maximum Recent Files",
+                                                                                                                                                                                                "Enter maximum recent files:",
+                                                                                                                                                                                                SVGStudioDataManager::GetMaximumRecentHistory(),
+                                                                                                                                                                                                1,
+                                                                                                                                                                                                1000000,
+                                                                                                                                                                                                1,
+                                                                                                                                                                                                &ok
+                                                                                                                                                                                            );
+
+                                                                                                                                                            if(!ok) {
+                                                                                                                                                                        maximumRecentHistoryCombo->setCurrentText(
+                                                                                                                                                                                                                        QString::number(
+                                                                                                                                                                                                                                            SVGStudioDataManager::GetMaximumRecentHistory()
+                                                                                                                                                                                                                                        )
+                                                                                                                                                                                                                    );
+
+                                                                                                                                                                        return;
+                                                                                                                                                                    }
+
+                                                                                                                                                            SVGStudioDataManager::SetMaximumRecentHistory(value);
+                                                                                                                                                            QString customValue = QString::number(value);
+                                                                                                                                                            if(maximumRecentHistoryCombo->findText(customValue) == -1) {
+                                                                                                                                                                                                                            maximumRecentHistoryCombo->insertItem(
+                                                                                                                                                                                                                                                                        maximumRecentHistoryCombo->count() - 1,
+                                                                                                                                                                                                                                                                        customValue
+                                                                                                                                                                                                                                                                    );
+                                                                                                                                                                                                                        }
+                                                                                                                                                            maximumRecentHistoryCombo->setCurrentText(customValue);
                                                                                                                                                             return;
                                                                                                                                                         }
 
-                                                                                                                                SVGStudioDataManager::SetMaximumRecentHistory(
-                                                                                                                                                                                text.toInt()
-                                                                                                                                                                            );
+                                                                                                                                                                SVGStudioDataManager::SetMaximumRecentHistory(
+                                                                                                                                                                                                                text.toInt()
+                                                                                                                                                                                                            );
                                                                                                                             }
                                     );
 
