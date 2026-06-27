@@ -60,6 +60,7 @@ Project - SVG Studio
 #include<QLocalSocket>
 #include<QProcess>
 #include <opencv2/opencv.hpp>
+#include<QComboBox>
 
 // Paths Collection class
 class FilePaths {
@@ -496,21 +497,36 @@ private:
     QFrame *background;
     QFrame *knob;
     QPropertyAnimation *animation;
+    QLabel *stateLabel;
 
 public:
     SVGStudioToggle(QWidget *parent = nullptr):QWidget(parent),isOn(false) {
-        setFixedSize(44,24);
+        setFixedSize(90,24);
 
         background = new QFrame(this);
-        background->setGeometry(0,0,44,24);
+        background->setGeometry(23,0,44,24);
         background->setStyleSheet(Style::ToggleOffStyle());
 
         knob = new QFrame(this);
-        knob->setGeometry(2,2,20,20);
+        knob->setGeometry(25,2,20,20);
         knob->setStyleSheet(
                                 "background:white;"
                                 "border-radius:10px;"
                             );
+
+        stateLabel = new QLabel("OFF", this);
+        stateLabel->setGeometry(0,0,22,24);
+        stateLabel->setAlignment(Qt::AlignCenter);
+        stateLabel->setStyleSheet(
+                                    "color:white;"
+                                    "font-size:9pt;"
+                                    "font-weight:bold;"
+                                    "background:transparent;"
+                                );
+
+        background->lower();
+        stateLabel->raise();
+        knob->raise();
 
         animation = new QPropertyAnimation(knob,"pos",this);
         animation->setDuration(150);
@@ -524,16 +540,20 @@ public:
                                         isOn = checked;
                                         animation->stop();
                                         if(isOn) {
+                                                    stateLabel->setText("ON");
+                                                    stateLabel->setGeometry(70,0,20,24);
                                                     background->setStyleSheet(Style::ToggleOnStyle());
 
                                                     animation->setStartValue(knob->pos());
-                                                    animation->setEndValue(QPoint(22,2));
+                                                    animation->setEndValue(QPoint(45,2));
                                                 }
                                         else {
+                                                    stateLabel->setText("OFF");
+                                                    stateLabel->setGeometry(0,0,20,24);
                                                     background->setStyleSheet(Style::ToggleOffStyle());
 
                                                     animation->setStartValue(knob->pos());
-                                                    animation->setEndValue(QPoint(2,2));
+                                                    animation->setEndValue(QPoint(25,2));
                                                 }
 
                                         animation->start();
@@ -1786,6 +1806,8 @@ private:
     QLabel *defaultSvgAppLabel;
     SVGStudioToggle *defaultSvgAppToggle;
     QHBoxLayout *defaultAppLayout;
+    QLabel *maximumRecentHistoryLabel;
+    QComboBox *maximumRecentHistoryCombo;
 
 public:
     QFrame* CreateSeparator() {
@@ -1978,9 +2000,34 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     QLabel *savedPathsLabel;
                                     savedPathsLabel = new QLabel("Saved Paths");
 
+                                    // Label - Recent History Label
                                     recentHistoryLabel = new QLabel("Collect Recent History");
                                     recentHistoryStatusLabel = new QLabel;
+
+                                    // Maximum Recent History
+                                    maximumRecentHistoryLabel = new QLabel("Maximum Recent Files");
+                                    maximumRecentHistoryCombo = new QComboBox;
+                                    maximumRecentHistoryCombo->addItems(
+                                                                            {
+                                                                                "1",
+                                                                                "5",
+                                                                                "10",
+                                                                                "20",
+                                                                                "30",
+                                                                                "40",
+                                                                                "50",
+                                                                                "60",
+                                                                                "80",
+                                                                                "100",
+                                                                                "Custom..."
+                                                                            }
+                                                                        );
+
+                                    maximumRecentHistoryCombo->setCurrentText("50");
                                     recentHistoryToggle = new SVGStudioToggle;
+                                    recentHistoryToggle->SetChecked(SVGStudioDataManager::IsRecentHistoryEnabled());
+                                    maximumRecentHistoryCombo->setEnabled(recentHistoryToggle->IsChecked());
+
                                     recentHistoryToggle->SetChecked(
                                                                         SVGStudioDataManager::IsRecentHistoryEnabled()
                                                                     );
@@ -2136,6 +2183,9 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     recentHistoryLayout->addWidget(recentHistoryStatusLabel);
                                     recentHistoryLayout->addStretch();
                                     recentHistoryLayout->addWidget(recentHistoryToggle);
+                                    recentHistoryLayout->addSpacing(15);
+                                    recentHistoryLayout->addWidget(maximumRecentHistoryLabel);
+                                    recentHistoryLayout->addWidget(maximumRecentHistoryCombo);
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryLayout);
                                     layout->addWidget(CreateSeparator());
@@ -2495,14 +2545,14 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     );
 
                             connect(recentHistoryToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
-                                                                                                            SVGStudioDataManager::SetRecentHistoryEnabled(checked);
-                                                                                                            if(checked) {
-                                                                                                                            recentHistoryStatusLabel->setText("Do Not Collect Recent History");
-                                                                                                                        }
-                                                                                                            else {
-                                                                                                                    recentHistoryStatusLabel->setText("Collect Recent History");
-                                                                                                                }
-                                                                                                        }
+                                                                                                                SVGStudioDataManager::SetRecentHistoryEnabled(checked);
+                                                                                                                recentHistoryStatusLabel->setText(checked
+                                                                                                                                                            ? "Collect Recent History"
+                                                                                                                                                            : "Do Not Collect Recent History"
+                                                                                                                                                        );
+
+                                                                                                                maximumRecentHistoryCombo->setEnabled(checked);
+                                                                                                            }
                                     );
 
                             // connect - Disable Button(s) while tohggle OFF
@@ -2565,6 +2615,15 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                             connect(systemApplyButton,&QPushButton::clicked,this,[=]() {
                                                                                             Automate::SystemIconApply(this);
                                                                                         }
+                                    );
+                            
+                            connect(maximumRecentHistoryCombo,&QComboBox::currentTextChanged,this,[&](const QString &value) {
+                                                                                                                                    if(value == "Custom...") {
+                                                                                                                                                                    return;
+                                                                                                                                                                }
+
+                                                                                                                                    qDebug()<<"Maximum Recent History:"<<value;
+                                                                                                                                }
                                     );
 
                             connect(defaultSvgAppToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
