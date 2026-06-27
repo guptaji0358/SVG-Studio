@@ -2194,15 +2194,20 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     layout->addWidget(CreateSeparator());
 
                                     // Layout - Add Layout (Collect Recents History + Toggle)
-                                    recentHistoryLayout->addWidget(recentHistoryStatusLabel);
-                                    recentHistoryLayout->addStretch();
-                                    recentHistoryLayout->addWidget(recentHistoryToggle);
-                                    recentHistoryLayout->addSpacing(15);
-                                    recentHistoryLayout->addWidget(maximumRecentHistoryLabel);
-                                    recentHistoryLayout->addWidget(maximumRecentHistoryCombo);
+                                    QHBoxLayout *recentHistoryToggleLayout = new QHBoxLayout;
+                                    recentHistoryToggleLayout->addWidget(recentHistoryStatusLabel);
+                                    recentHistoryToggleLayout->addStretch();
+                                    recentHistoryToggleLayout->addWidget(recentHistoryToggle);
+
+                                    QHBoxLayout *maximumRecentHistoryLayout = new QHBoxLayout;
+                                    maximumRecentHistoryLayout->addWidget(maximumRecentHistoryLabel);
+                                    maximumRecentHistoryLayout->addStretch();
+                                    maximumRecentHistoryLayout->addWidget(maximumRecentHistoryCombo);
+
                                     layout->addWidget(recentHistoryLabel);
-                                    layout->addLayout(recentHistoryLayout);
-                                    layout->addWidget(CreateSeparator());
+                                    layout->addLayout(recentHistoryToggleLayout);
+                                    layout->addSpacing(8);
+                                    layout->addLayout(maximumRecentHistoryLayout);
 
                                     // Layout - Default Mode Layout
                                     defaultAppLayout = new QHBoxLayout;
