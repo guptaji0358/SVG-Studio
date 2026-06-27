@@ -43,6 +43,7 @@ qt_add_resources(SVGStudio app_resources
         Assets/LIGHT_MODE_SVG_FILE_ICON.svg
         Assets/PROGRESS_LOADER.gif
         Assets/SUCCESS.gif
+        Assets/TRASH_BUTTON_ICON.png
         DARK_MODE_SVG_FILE_ICON.ico
         LIGHT_MODE_SVG_FILE_ICON.ico
 )

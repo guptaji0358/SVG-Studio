@@ -82,6 +82,7 @@ public:
                     static inline const QString LightModeSvgFileIconPath = ":/Assets/LIGHT_MODE_SVG_FILE_ICON.svg";
                     static inline const QString progressLoaderAnimationPath = ":/Assets/PROGRESS_LOADER.gif";
                     static inline const QString successAnimationPath = ":/Assets/SUCCESS.gif";
+                    static inline const QString trashButtonIconPath = ":/Assets/TRASH_BUTTON_ICON.png";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
                     static inline const QString DataFileName ="/SVGStudioData.json";
@@ -301,6 +302,27 @@ public:
                                                                         }
                                                             )";
                                             }
+
+    static QString clearRecentHistoryButtonStyle() {
+                                                        return R"(
+                                                                    QPushButton {
+                                                                                    background:none;
+                                                                                    color:white;
+                                                                                    border:none;
+                                                                                    font-weight:bold;
+                                                                                }
+                                                                    )";
+                                                }
+
+    static QString messageLabelStyle() {
+                                            return R"(
+                                                    QLabel {
+                                                                    font-size:14px;
+                                                                    font-weight:600;
+                                                                    color:white;
+                                                                }
+                                                    )";
+                                        }
 };
 
 class SVGStudioDataManager {
@@ -500,6 +522,12 @@ public:
                                                             data["default_svg_app_enabled"] = enabled;
                                                             SaveData(data);
                                                         }
+
+    static void ClearRecentHistory() {
+                                            QJsonObject data = LoadData();
+                                            data["recent_files"] = QJsonArray();
+                                            SaveData(data);
+                                    }
 };
 
 // Toogle ON/OFF
@@ -582,6 +610,52 @@ protected:
                                                             SetChecked(!isOn);
                                                             QWidget::mousePressEvent(event);
                                                         }
+};
+
+// Class - Success Dialog
+class SVGStudioSuccessDialog : public QDialog {
+                                                    Q_OBJECT
+
+public:
+    SVGStudioSuccessDialog(const QString &message,QWidget *parent = nullptr):QDialog(parent) {
+                                                                                                setWindowFlags(
+                                                                                                                Qt::Dialog |
+                                                                                                                Qt::FramelessWindowHint
+                                                                                                            );
+                                                                                                setModal(true);
+                                                                                                setFixedSize(320,320);
+
+                                                                                                QVBoxLayout *layout = new QVBoxLayout(this);
+
+                                                                                                QLabel *animationLabel = new QLabel();
+                                                                                                animationLabel->setMinimumSize(320,320);
+                                                                                                animationLabel->setAlignment(Qt::AlignCenter);
+
+                                                                                                QMovie *movie = new QMovie(FilePaths::successAnimationPath);
+                                                                                                movie->setScaledSize(QSize(320,320));
+                                                                                                animationLabel->setMovie(movie);
+                                                                                                movie->start();
+
+                                                                                                QLabel *messageLabel = new QLabel(message);
+                                                                                                messageLabel->setAlignment(Qt::AlignCenter);
+                                                                                                messageLabel->setWordWrap(true);
+                                                                                                messageLabel->setStyleSheet(Style::messageLabelStyle());
+
+                                                                                                layout->addStretch();
+                                                                                                layout->addWidget(
+                                                                                                                    animationLabel,
+                                                                                                                    0,
+                                                                                                                    Qt::AlignCenter
+                                                                                                                );
+                                                                                                layout->addSpacing(5);
+                                                                                                layout->addWidget(messageLabel);
+                                                                                                layout->addStretch();
+                                                                                                QTimer::singleShot(
+                                                                                                                        movie->nextFrameDelay() * movie->frameCount(),
+                                                                                                                        this,
+                                                                                                                        &QDialog::accept
+                                                                                                                    );
+                                                                                            }
 };
 
 class SVGStudioShortcutEditDialog : public QDialog {
@@ -1822,6 +1896,7 @@ private:
     QHBoxLayout *defaultAppLayout;
     QLabel *maximumRecentHistoryLabel;
     QComboBox *maximumRecentHistoryCombo;
+    QPushButton *clearRecentHistoryButton;
 
 public:
     QFrame* CreateSeparator() {
@@ -2038,6 +2113,18 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                         );
 
                                     maximumRecentHistoryCombo->setCurrentText(QString::number(SVGStudioDataManager::GetMaximumRecentHistory()));
+
+                                    // Button - Delete Button -> Recent(s) History
+                                    clearRecentHistoryButton = new QPushButton;
+                                    // clearRecentHistoryButton->setFixedSize(36,36);
+                                    clearRecentHistoryButton->setCursor(Qt::PointingHandCursor);
+                                    clearRecentHistoryButton->setToolTip("Clear Recent History");
+                                    clearRecentHistoryButton->setIcon(QIcon(FilePaths::trashButtonIconPath));
+                                    clearRecentHistoryButton->setIconSize(QSize(22,22));
+                                    clearRecentHistoryButton->setText("Move to Trash");
+                                    clearRecentHistoryButton->setFlat(true);
+                                    clearRecentHistoryButton->setStyleSheet(Style::clearRecentHistoryButtonStyle());
+
                                     recentHistoryToggle = new SVGStudioToggle;
                                     recentHistoryToggle->SetChecked(SVGStudioDataManager::IsRecentHistoryEnabled());
                                     maximumRecentHistoryCombo->setEnabled(recentHistoryToggle->IsChecked());
@@ -2203,6 +2290,8 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     maximumRecentHistoryLayout->addWidget(maximumRecentHistoryLabel);
                                     maximumRecentHistoryLayout->addStretch();
                                     maximumRecentHistoryLayout->addWidget(maximumRecentHistoryCombo);
+                                    maximumRecentHistoryLayout->addSpacing(8);
+                                    maximumRecentHistoryLayout->addWidget(clearRecentHistoryButton);
 
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryToggleLayout);
@@ -2618,7 +2707,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                     }
                                     );
 
-                            // connect - Appply Light Mod eApp File Icon in File explorer
+                            // connect - Apply Light Mod eApp File Icon in File explorer
                             connect(lightApplyButton,&QPushButton::clicked,this,[=]() {
                                                                                            SVGStudioDataManager::SetSvgIconMode("light");
                                                                                             ExplorerIconManager::ApplyLightIcon();
@@ -2630,7 +2719,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         }
                                     );
 
-                            // connect - Aply Light / Dark SVG File Icon  on svg files  accoridng os
+                            // connect - Apply Light / Dark SVG File Icon  on svg files  accoridng os
                             connect(systemApplyButton,&QPushButton::clicked,this,[=]() {
                                                                                             Automate::SystemIconApply(this);
                                                                                         }
@@ -2678,6 +2767,21 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                                             }
                                     );
 
+                            // connections - Delete Recent History in One click
+                            connect(clearRecentHistoryButton,&QPushButton::clicked,this,[&]() {
+                                                                                                    SVGStudioDataManager::ClearRecentHistory();
+                                                                                                    QMessageBox::information(
+                                                                                                                                this,
+                                                                                                                                "SVG Studio",
+                                                                                                                                "Recent History deleted successfully."
+                                                                                                                            );
+                                                                                                    SVGStudioSuccessDialog(
+                                                                                                                                "Recent History Deleted Successfully!"
+                                                                                                                            ).exec();
+                                                                                                }
+                                    );
+
+                            // connections - Make This Dafualt App in Windows
                             connect(defaultSvgAppToggle,&SVGStudioToggle::toggled,this,[=](bool checked) {
                                                                                                             SVGStudioDataManager::SetDefaultSvgAppEnabled(checked);
                                                                                                             if(checked) {
