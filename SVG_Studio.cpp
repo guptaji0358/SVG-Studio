@@ -2112,7 +2112,19 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                             }
                                                                         );
 
-                                    maximumRecentHistoryCombo->setCurrentText(QString::number(SVGStudioDataManager::GetMaximumRecentHistory()));
+                                    int recentLimit =
+                                    SVGStudioDataManager::GetMaximumRecentHistory();
+                                    QString recentLimitText =
+                                    QString::number(recentLimit);
+
+                                    // FIX: Add custom value if it doesn't already exist.
+                                    if(maximumRecentHistoryCombo->findText(recentLimitText) == -1) {
+                                                                                                        maximumRecentHistoryCombo->insertItem(
+                                                                                                                                                    maximumRecentHistoryCombo->count() - 1,
+                                                                                                                                                    recentLimitText
+                                                                                                                                                );
+                                                                                                    }
+                                    maximumRecentHistoryCombo->setCurrentText(recentLimitText);
 
                                     // Button - Delete Button -> Recent(s) History
                                     clearRecentHistoryButton = new QPushButton;
@@ -2770,11 +2782,6 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                             // connections - Delete Recent History in One click
                             connect(clearRecentHistoryButton,&QPushButton::clicked,this,[&]() {
                                                                                                     SVGStudioDataManager::ClearRecentHistory();
-                                                                                                    QMessageBox::information(
-                                                                                                                                this,
-                                                                                                                                "SVG Studio",
-                                                                                                                                "Recent History deleted successfully."
-                                                                                                                            );
                                                                                                     SVGStudioSuccessDialog(
                                                                                                                                 "Recent History Deleted Successfully!"
                                                                                                                             ).exec();
