@@ -82,6 +82,8 @@ public:
                     static inline const QString LightModeSvgFileIconPath = ":/Assets/LIGHT_MODE_SVG_FILE_ICON.svg";
                     static inline const QString progressLoaderAnimationPath = ":/Assets/PROGRESS_LOADER.gif";
                     static inline const QString successAnimationPath = ":/Assets/SUCCESS.gif";
+                    static inline const QString resetButton360GifPath = ":/Assets/RESET_BUTTON_360.gif";
+                    static inline const QString resetButtonGifPath = ":/Assets/RESET_BUTTON.gif";
                     static inline const QString trashButtonIconPath = ":/Assets/TRASH_BUTTON_ICON.png";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
@@ -304,6 +306,17 @@ public:
                                             }
 
     static QString clearRecentHistoryButtonStyle() {
+                                                        return R"(
+                                                                    QPushButton {
+                                                                                    background:none;
+                                                                                    color:white;
+                                                                                    border:none;
+                                                                                    font-weight:bold;
+                                                                                }
+                                                                    )";
+                                                }
+
+    static QString resetRecentsSettingsButtonStyle() {
                                                         return R"(
                                                                     QPushButton {
                                                                                     background:none;
@@ -1897,6 +1910,9 @@ private:
     QLabel *maximumRecentHistoryLabel;
     QComboBox *maximumRecentHistoryCombo;
     QPushButton *clearRecentHistoryButton;
+    QPushButton *resetRecentSettingsButton;
+    QLabel *resetRecentAnimationLabel;
+    QMovie *resetRecentHistoryMovie;
 
 public:
     QFrame* CreateSeparator() {
@@ -2116,8 +2132,6 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     SVGStudioDataManager::GetMaximumRecentHistory();
                                     QString recentLimitText =
                                     QString::number(recentLimit);
-
-                                    // FIX: Add custom value if it doesn't already exist.
                                     if(maximumRecentHistoryCombo->findText(recentLimitText) == -1) {
                                                                                                         maximumRecentHistoryCombo->insertItem(
                                                                                                                                                     maximumRecentHistoryCombo->count() - 1,
@@ -2128,14 +2142,32 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                                     // Button - Delete Button -> Recent(s) History
                                     clearRecentHistoryButton = new QPushButton;
-                                    // clearRecentHistoryButton->setFixedSize(36,36);
                                     clearRecentHistoryButton->setCursor(Qt::PointingHandCursor);
-                                    clearRecentHistoryButton->setToolTip("Clear Recent History");
+                                    clearRecentHistoryButton->setToolTip("Move History in Trash");
                                     clearRecentHistoryButton->setIcon(QIcon(FilePaths::trashButtonIconPath));
                                     clearRecentHistoryButton->setIconSize(QSize(22,22));
                                     clearRecentHistoryButton->setText("Move to Trash");
                                     clearRecentHistoryButton->setFlat(true);
                                     clearRecentHistoryButton->setStyleSheet(Style::clearRecentHistoryButtonStyle());
+
+                                    // Button - Reset Button -> Recent(s) Setting(s)
+                                    resetRecentSettingsButton = new QPushButton;
+                                    resetRecentSettingsButton->setFixedSize(40,40);
+                                    resetRecentSettingsButton->setCursor(Qt::PointingHandCursor);
+                                    resetRecentSettingsButton->setToolTip("Reset Recent History");
+                                    resetRecentSettingsButton->setIconSize(QSize(22,22));
+                                    resetRecentSettingsButton->setFlat(true);
+                                    resetRecentSettingsButton->setContentsMargins(0,0,0,0);
+                                    resetRecentSettingsButton->setStyleSheet(Style::resetRecentsSettingsButtonStyle());
+
+                                    // Recent History  Animation
+                                    resetRecentAnimationLabel = new QLabel(resetRecentSettingsButton);
+                                    resetRecentAnimationLabel->setAlignment(Qt::AlignCenter);
+                                    resetRecentAnimationLabel->setGeometry(2,2,36,36);
+                                    resetRecentHistoryMovie = new QMovie(FilePaths::resetButtonGifPath);
+                                   resetRecentHistoryMovie->setScaledSize(resetRecentAnimationLabel->size());
+                                    resetRecentAnimationLabel->setMovie(resetRecentHistoryMovie);
+                                    resetRecentHistoryMovie->start();
 
                                     recentHistoryToggle = new SVGStudioToggle;
                                     recentHistoryToggle->SetChecked(SVGStudioDataManager::IsRecentHistoryEnabled());
@@ -2304,6 +2336,8 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     maximumRecentHistoryLayout->addWidget(maximumRecentHistoryCombo);
                                     maximumRecentHistoryLayout->addSpacing(8);
                                     maximumRecentHistoryLayout->addWidget(clearRecentHistoryButton);
+                                    maximumRecentHistoryLayout->addSpacing(5);
+                                    maximumRecentHistoryLayout->addWidget(resetRecentSettingsButton);
 
                                     layout->addWidget(recentHistoryLabel);
                                     layout->addLayout(recentHistoryToggleLayout);
@@ -2808,6 +2842,34 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                                                             );
                                                                                                                 }
                                                                                                         }
+                                    );
+
+                            connect(resetRecentSettingsButton,&QPushButton::clicked,this,[&]() {
+                                                                                                    resetRecentHistoryMovie->stop();
+                                                                                                    delete resetRecentHistoryMovie;
+
+                                                                                                    resetRecentHistoryMovie = new QMovie(FilePaths::resetButton360GifPath);
+                                                                                                    resetRecentHistoryMovie->setScaledSize(QSize(36,36));
+                                                                                                    resetRecentAnimationLabel->setMovie(resetRecentHistoryMovie);
+                                                                                                    resetRecentHistoryMovie->start();
+
+                                                                                                    QTimer::singleShot(1800,this,[&]() {
+                                                                                                                                            SVGStudioDataManager::SetRecentHistoryEnabled(false);
+                                                                                                                                            SVGStudioDataManager::SetMaximumRecentHistory(50);
+                                                                                                                                            recentHistoryToggle->SetChecked(false);
+                                                                                                                                            maximumRecentHistoryCombo->setCurrentText("50");
+                                                                                                                                            SVGStudioSuccessDialog(
+                                                                                                                                                                        "Recent History Settings Reset Successfully!"
+                                                                                                                                                                    ).exec();
+
+                                                                                                                                            delete resetRecentHistoryMovie;
+                                                                                                                                            resetRecentHistoryMovie = new QMovie(FilePaths::resetButtonGifPath);
+                                                                                                                                            resetRecentHistoryMovie->setScaledSize(QSize(36,36));
+                                                                                                                                            resetRecentAnimationLabel->setMovie(resetRecentHistoryMovie);
+                                                                                                                                            resetRecentHistoryMovie->start();
+                                                                                                                                        }
+                                                                                                                        );
+                                                                                                }
                                     );
                         }
 

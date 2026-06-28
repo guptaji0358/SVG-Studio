@@ -44,6 +44,8 @@ qt_add_resources(SVGStudio app_resources
         Assets/PROGRESS_LOADER.gif
         Assets/SUCCESS.gif
         Assets/TRASH_BUTTON_ICON.png
+        Assets/RESET_BUTTON_360.gif
+        Assets/RESET_BUTTON.gif
         DARK_MODE_SVG_FILE_ICON.ico
         LIGHT_MODE_SVG_FILE_ICON.ico
 )
