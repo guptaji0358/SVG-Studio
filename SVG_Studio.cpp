@@ -84,6 +84,8 @@ public:
                     static inline const QString successAnimationPath = ":/Assets/SUCCESS.gif";
                     static inline const QString resetButton360GifPath = ":/Assets/RESET_BUTTON_360.gif";
                     static inline const QString resetButtonGifPath = ":/Assets/RESET_BUTTON.gif";
+                    static inline const QString failureAnimationPath = ":/Assets/FAILURE.gif";
+                    static inline const QString appliedCheckmarkPath = ":/Assets/APPLIED_CHECKMARK.svg";
                     static inline const QString trashButtonIconPath = ":/Assets/TRASH_BUTTON_ICON.png";
                     static inline const QString DarkModeSvgFileICOIcon = "DARK_MODE_SVG_FILE_ICON.ico";
                     static inline const QString LightModeSvgFileICOIcon = "LIGHT_MODE_SVG_FILE_ICON.ico";
@@ -99,16 +101,32 @@ public:
 // Apply ICO in File Explorer
 class ExplorerIconManager {
 public:
-    static void ApplySvgIcon(const QString& icoPath) {
-                                                        QSettings svgClass("HKEY_CURRENT_USER\\Software\\Classes\\.svg",QSettings::NativeFormat);
-                                                        svgClass.setValue(".", "SVGStudio.svg");
-                                                        QSettings defaultIcon(
-                                                                                "HKEY_CURRENT_USER\\Software\\Classes\\SVGStudio.svg\\DefaultIcon",
-                                                                                QSettings::NativeFormat
-                                                                            );
-                                                        defaultIcon.setValue(".", QDir::toNativeSeparators(icoPath));
-                                                        SHChangeNotify(SHCNE_ASSOCCHANGED,SHCNF_IDLIST,nullptr,nullptr);
-                                                    }
+    static bool ApplySvgIcon(const QString& icoPath) {
+                                                            try {
+                                                                    QSettings svgClass(
+                                                                                            "HKEY_CURRENT_USER\\Software\\Classes\\.svg",
+                                                                                            QSettings::NativeFormat
+                                                                                        );
+
+                                                                    svgClass.setValue(".", "SVGStudio.svg");
+                                                                    QSettings defaultIcon(
+                                                                                                "HKEY_CURRENT_USER\\Software\\Classes\\SVGStudio.svg\\DefaultIcon",
+                                                                                                QSettings::NativeFormat
+                                                                                            );
+                                                                    defaultIcon.setValue(".", QDir::toNativeSeparators(icoPath));
+                                                                    SHChangeNotify(
+                                                                                        SHCNE_ASSOCCHANGED,
+                                                                                        SHCNF_IDLIST,
+                                                                                        nullptr,
+                                                                                        nullptr
+                                                                                    );
+                                                                    return true;
+                                                                }
+
+                                                            catch (const std::exception& e) {
+                                                                                                return false;
+                                                                                            }
+                                                        }
 
     static void ApplyDarkIcon() {
                                         QString icoPath = QCoreApplication::applicationDirPath() + "/" + FilePaths::DarkModeSvgFileICOIcon; ApplySvgIcon(icoPath);
@@ -645,6 +663,52 @@ public:
                                                                                                 animationLabel->setAlignment(Qt::AlignCenter);
 
                                                                                                 QMovie *movie = new QMovie(FilePaths::successAnimationPath);
+                                                                                                movie->setScaledSize(QSize(320,320));
+                                                                                                animationLabel->setMovie(movie);
+                                                                                                movie->start();
+
+                                                                                                QLabel *messageLabel = new QLabel(message);
+                                                                                                messageLabel->setAlignment(Qt::AlignCenter);
+                                                                                                messageLabel->setWordWrap(true);
+                                                                                                messageLabel->setStyleSheet(Style::messageLabelStyle());
+
+                                                                                                layout->addStretch();
+                                                                                                layout->addWidget(
+                                                                                                                    animationLabel,
+                                                                                                                    0,
+                                                                                                                    Qt::AlignCenter
+                                                                                                                );
+                                                                                                layout->addSpacing(5);
+                                                                                                layout->addWidget(messageLabel);
+                                                                                                layout->addStretch();
+                                                                                                QTimer::singleShot(
+                                                                                                                        movie->nextFrameDelay() * movie->frameCount(),
+                                                                                                                        this,
+                                                                                                                        &QDialog::accept
+                                                                                                                    );
+                                                                                            }
+};
+
+// Class - Warning Dialog
+class SVGStudioFailureDialog : public QDialog {
+                                                    Q_OBJECT
+
+public:
+    SVGStudioFailureDialog(const QString &message,QWidget *parent = nullptr):QDialog(parent) {
+                                                                                                setWindowFlags(
+                                                                                                                Qt::Dialog |
+                                                                                                                Qt::FramelessWindowHint
+                                                                                                            );
+                                                                                                setModal(true);
+                                                                                                setFixedSize(320,320);
+
+                                                                                                QVBoxLayout *layout = new QVBoxLayout(this);
+
+                                                                                                QLabel *animationLabel = new QLabel();
+                                                                                                animationLabel->setMinimumSize(320,320);
+                                                                                                animationLabel->setAlignment(Qt::AlignCenter);
+
+                                                                                                QMovie *movie = new QMovie(FilePaths::failureAnimationPath);
                                                                                                 movie->setScaledSize(QSize(320,320));
                                                                                                 animationLabel->setMovie(movie);
                                                                                                 movie->start();
@@ -1899,6 +1963,11 @@ private:
     QHBoxLayout *iconToggleLayout;
     QPushButton *darkPreviewButton;
     QPushButton *darkApplyButton;
+    QLabel *darkProgressLabel;
+    QLabel *darkSuccessLabel;
+    QLabel *darkAppliedLabel;
+    QMovie *darkProgressMovie;
+    QMovie *darkSuccessMovie;
     QPushButton *lightPreviewButton;
     QPushButton *lightApplyButton;
     QPushButton *systemPreviewButton;
@@ -2219,12 +2288,28 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     darkApplyButton->setCursor(Qt::PointingHandCursor);
                                     darkApplyButton->setToolTip("Apply File Icon");
 
+                                    darkProgressLabel = new QLabel;
+                                    darkSuccessLabel = new QLabel;
+                                    darkAppliedLabel = new QLabel("Applied");
+                                    darkProgressMovie = new QMovie(FilePaths::progressLoaderAnimationPath);
+                                    darkSuccessMovie = new QMovie(FilePaths::successAnimationPath);
+                                    darkProgressMovie->setScaledSize(QSize(26,26));
+                                    darkSuccessMovie->setScaledSize(QSize(26,26));
+                                    darkProgressLabel->setMovie(darkProgressMovie);
+                                    darkSuccessLabel->setMovie(darkSuccessMovie);
+                                    darkProgressLabel->hide();
+                                    darkSuccessLabel->hide();
+                                    darkAppliedLabel->hide();
+
                                     darkPreviewButton->hide();
                                     darkApplyButton->hide();
 
                                     darkLayout->addWidget(darkLabel);
                                     darkLayout->addStretch();
                                     darkLayout->addWidget(darkPreviewButton);
+                                    darkLayout->addWidget(darkProgressLabel);
+                                    darkLayout->addWidget(darkSuccessLabel);
+                                    darkLayout->addWidget(darkAppliedLabel);
                                     darkLayout->addWidget(darkApplyButton);
 
                                     darkCard->setLayout(darkLayout);
@@ -2740,16 +2825,41 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                             // connect - Apply Dark App File Icon in file Explorer
                             connect(darkApplyButton,&QPushButton::clicked,this,[=]() {
-                                                                                        QString darkIco = QCoreApplication::applicationDirPath() + "/DARK_MODE_SVG_FILE_ICON.ico";
+                                                                                        darkApplyButton->hide();
+                                                                                        darkProgressLabel->show();
+                                                                                        darkProgressMovie->start();
+
+                                                                                        QApplication::processEvents();
+                                                                                        QString darkIco = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::DarkModeSvgFileICOIcon);
                                                                                         SVGStudioDataManager::SetSvgIconMode("dark");
-                                                                                        ExplorerIconManager::ApplySvgIcon(
-                                                                                                                            QDir::toNativeSeparators(darkIco)
-                                                                                                                        );
-                                                                                        QMessageBox::information(
-                                                                                                                    this,
-                                                                                                                    "SVG Studio",
-                                                                                                                    "Dark File Icon Applied"
-                                                                                                                );
+
+                                                                                        bool success = ExplorerIconManager::ApplySvgIcon(QDir::toNativeSeparators(darkIco));
+                                                                                        darkProgressMovie->stop();
+                                                                                        darkProgressLabel->hide();
+                                                                                        if(success) {
+                                                                                                        darkSuccessLabel->show();
+                                                                                                        darkSuccessMovie->start();
+                                                                                                        QTimer::singleShot(1200,this,[=]() {
+                                                                                                                                                darkSuccessMovie->stop();
+                                                                                                                                                darkSuccessLabel->hide();
+                                                                                                                                                QLabel *icon = new QLabel;
+                                                                                                                                                icon->setPixmap(QPixmap(FilePaths::appliedCheckmarkPath).scaled(
+                                                                                                                                                                                                                18,
+                                                                                                                                                                                                                18,
+                                                                                                                                                                                                                Qt::KeepAspectRatio,
+                                                                                                                                                                                                                Qt::SmoothTransformation
+                                                                                                                                                                                                            )
+                                                                                                                                                                );
+                                                                                                                                                darkAppliedLabel->show();
+                                                                                                                                            }
+                                                                                                                            );
+                                                                                                    }
+                                                                                        else {
+                                                                                                darkApplyButton->show();
+                                                                                                SVGStudioFailureDialog(
+                                                                                                                            "Unable to apply SVG File Icons."
+                                                                                                                        ).exec();
+                                                                                            }
                                                                                     }
                                     );
 
