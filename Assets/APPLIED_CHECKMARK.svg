@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="128"
+     height="128"
+     viewBox="0 0 128 128">
+
+    <defs>
+
+        <!-- Premium Green Gradient -->
+        <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#34D399"/>
+            <stop offset="100%" stop-color="#22C55E"/>
+        </linearGradient>
+
+        <!-- Soft Fluent Glow -->
+        <radialGradient id="glowGradient">
+            <stop offset="0%" stop-color="#34D399" stop-opacity="0.20"/>
+            <stop offset="100%" stop-color="#34D399" stop-opacity="0"/>
+        </radialGradient>
+
+        <filter id="softGlow"
+                x="-40%"
+                y="-40%"
+                width="180%"
+                height="180%">
+            <feGaussianBlur stdDeviation="2.5"/>
+        </filter>
+
+    </defs>
+
+    <!-- Soft Glow -->
+    <circle
+        cx="64"
+        cy="64"
+        r="30"
+        fill="url(#glowGradient)"
+        filter="url(#softGlow)"/>
+
+    <!-- Circle -->
+    <circle
+        cx="64"
+        cy="64"
+        r="30"
+        fill="none"
+        stroke="url(#ringGradient)"
+        stroke-width="5"
+        stroke-linecap="round"/>
+
+    <!-- Checkmark -->
+    <path
+        d="M49 65
+           L60 76
+           L81 53"
+        fill="none"
+        stroke="#FFFFFF"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+</svg>

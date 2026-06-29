@@ -345,6 +345,17 @@ public:
                                                                     )";
                                                 }
 
+    static QString ApplyButtonStyle() {
+                                            return R"(
+                                                        QPushButton {
+                                                                        background:none;
+                                                                        color:white;
+                                                                        border:none;
+                                                                        font-weight:bold;
+                                                                    }
+                                                        )";
+                                        }
+
     static QString messageLabelStyle() {
                                             return R"(
                                                     QLabel {
@@ -1910,7 +1921,11 @@ protected:
                                                                     // Results - Show the Priview + Apply Button(s) while Hover
                                                                     if(event->type() == QEvent::Enter) {
                                                                                                             previewButton->show();
-                                                                                                            applyButton->show();
+
+                                                                                                            // Condition - Check Applied Button is Appplied  as true or  false if false so i  see Apply bButton else Hidden
+                                                                                                            if (!applyButton->property("Applied").toBool()) {
+                                                                                                                                                                applyButton->show();
+                                                                                                                                                            }
                                                                                                         }
 
                                                                     // Results - Hide the Priview + Apply Button(s) while Leave or Mous eOutside
@@ -1963,6 +1978,7 @@ private:
     QHBoxLayout *iconToggleLayout;
     QPushButton *darkPreviewButton;
     QPushButton *darkApplyButton;
+    QPushButton *darkAppliedButton;
     QLabel *darkProgressLabel;
     QLabel *darkSuccessLabel;
     QLabel *darkAppliedLabel;
@@ -1982,6 +1998,11 @@ private:
     QPushButton *resetRecentSettingsButton;
     QLabel *resetRecentAnimationLabel;
     QMovie *resetRecentHistoryMovie;
+    QVBoxLayout *layout;
+    QVBoxLayout *tabLayout;
+    QVBoxLayout *generalLayout;
+    QCheckBox *openWelcomePageCheckBox;
+    QVBoxLayout *appearanceLayout;
 
 public:
     QFrame* CreateSeparator() {
@@ -2010,7 +2031,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                     CreateShortcutsTab();
                                                                                     CreateCustomiseTab();
                                                                                     connections(); 
-                                                                                    QVBoxLayout *layout;
+
                                                                                     layout = new QVBoxLayout;
                                                                                     layout->addWidget(settingsTabs);
                                                                                     setLayout(layout);
@@ -2021,17 +2042,15 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
     // Genneral Tab
     void CreateGeneralTab() {
                                 generalTab = new QWidget;
-                                QVBoxLayout *generalLayout;
                                 generalLayout = new QVBoxLayout;
-                                QCheckBox *openWelcomePageCheckBox;
                                 appearanceContainer = new QWidget;
-                                QVBoxLayout *appearanceLayout;
                                 appearanceLayout = new QVBoxLayout;
-
                                 openWelcomePageCheckBox = new QCheckBox("Open Welcome Page On Startup");
 
                                 appearanceButton = new QPushButton("Appearnce");
                                 appearanceButton->setIcon(QIcon(FilePaths::rightArrowIconPath));
+                                appearanceButton->setToolTip("Appearance");
+                                appearanceButton->setCursor(Qt::PointingHandCursor);
 
                                 darkThemeRadioButton = new QRadioButton("Dark");
                                 lightThemeRadioButton = new QRadioButton("Light");
@@ -2287,6 +2306,15 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     darkApplyButton = new QPushButton("Apply");
                                     darkApplyButton->setCursor(Qt::PointingHandCursor);
                                     darkApplyButton->setToolTip("Apply File Icon");
+                                    darkApplyButton->setStyleSheet(Style::ApplyButtonStyle());
+
+                                    // Button - Disabled Applied Buttn for Dark file Icon
+                                    darkAppliedButton = new QPushButton("Applied");
+                                    darkAppliedButton->setToolTip("Applied");
+                                    darkAppliedButton->setIcon(QIcon(FilePaths::appliedCheckmarkPath));
+                                    darkAppliedButton->setIconSize(QSize(18,18));
+                                    darkAppliedButton->setEnabled(false);
+                                    darkAppliedButton->hide();
 
                                     darkProgressLabel = new QLabel;
                                     darkSuccessLabel = new QLabel;
@@ -2309,8 +2337,31 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     darkLayout->addWidget(darkPreviewButton);
                                     darkLayout->addWidget(darkProgressLabel);
                                     darkLayout->addWidget(darkSuccessLabel);
-                                    darkLayout->addWidget(darkAppliedLabel);
                                     darkLayout->addWidget(darkApplyButton);
+                                    darkLayout->addWidget(darkAppliedButton);
+
+                                    QString mode = SVGStudioDataManager::GetSvgIconMode();
+                                    if (mode == "dark") {
+                                                            darkApplyButton->setProperty("Applied", true);
+                                                            darkApplyButton->hide();
+                                                            darkAppliedButton->show();
+                                                        }
+                                    else {
+                                            darkApplyButton->setProperty("Applied", false);
+                                            darkApplyButton->show();
+                                            darkAppliedButton->hide();
+                                        }
+
+                                    // Condition - Restore Apply/Applied state from saved settings.
+                                    if(SVGStudioDataManager::GetSvgIconMode() == "dark") {
+                                                                                                darkApplyButton->hide();
+                                                                                                darkAppliedButton->show();
+                                                                                                darkApplyButton->setProperty("Applied", true);
+                                                                                            }
+                                    else {
+                                                darkApplyButton->show();
+                                                darkAppliedButton->hide();
+                                            }
 
                                     darkCard->setLayout(darkLayout);
                                     darkCard->installEventFilter(new FileIconCardHoverFilter(
@@ -2456,7 +2507,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     scrollArea = new QScrollArea;
                                     scrollArea->setWidgetResizable(true);
                                     scrollArea->setWidget(scrollContent);
-                                    QVBoxLayout *tabLayout;
+
                                     tabLayout = new QVBoxLayout;
                                     tabLayout->addWidget(scrollArea);
                                     customizeTab->setLayout(tabLayout);
@@ -2837,21 +2888,20 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         darkProgressMovie->stop();
                                                                                         darkProgressLabel->hide();
                                                                                         if(success) {
-                                                                                                        darkSuccessLabel->show();
-                                                                                                        darkSuccessMovie->start();
-                                                                                                        QTimer::singleShot(1200,this,[=]() {
-                                                                                                                                                darkSuccessMovie->stop();
-                                                                                                                                                darkSuccessLabel->hide();
-                                                                                                                                                QLabel *icon = new QLabel;
-                                                                                                                                                icon->setPixmap(QPixmap(FilePaths::appliedCheckmarkPath).scaled(
-                                                                                                                                                                                                                18,
-                                                                                                                                                                                                                18,
-                                                                                                                                                                                                                Qt::KeepAspectRatio,
-                                                                                                                                                                                                                Qt::SmoothTransformation
-                                                                                                                                                                                                            )
-                                                                                                                                                                );
-                                                                                                                                                darkAppliedLabel->show();
-                                                                                                                                            }
+                                                                                                        QTimer::singleShot(1200, this, [=]() {
+                                                                                                                                                    darkSuccessMovie->stop();
+                                                                                                                                                    darkSuccessLabel->hide();
+                                                                                                                                                    SVGStudioSuccessDialog(
+                                                                                                                                                                                "Dark SVG File Icon Applied Successfully!").exec();
+                                                                                                                                                    darkApplyButton->setProperty("Applied", true);
+                                                                                                                                                    darkApplyButton->hide();
+                                                                                                                                                    darkAppliedButton->show();
+
+                                                                                                                                                    // Refresh UI immediately.
+                                                                                                                                                    darkAppliedButton->parentWidget()->update();
+                                                                                                                                                    darkAppliedButton->parentWidget()->repaint();
+                                                                                                                                                    QApplication::processEvents();
+                                                                                                                                                }
                                                                                                                             );
                                                                                                     }
                                                                                         else {
