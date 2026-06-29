@@ -114,10 +114,19 @@ public:
                                                                                                 QSettings::NativeFormat
                                                                                             );
                                                                     defaultIcon.setValue(".", QDir::toNativeSeparators(icoPath));
+                                                                    defaultIcon.sync();
+                                                                    svgClass.sync();
                                                                     SHChangeNotify(
                                                                                         SHCNE_ASSOCCHANGED,
                                                                                         SHCNF_IDLIST,
                                                                                         nullptr,
+                                                                                        nullptr
+                                                                                    );
+
+                                                                    SHChangeNotify(
+                                                                                        SHCNE_UPDATEITEM,
+                                                                                        SHCNF_PATH,
+                                                                                        L".svg",
                                                                                         nullptr
                                                                                     );
                                                                     return true;
@@ -128,13 +137,29 @@ public:
                                                                                             }
                                                         }
 
-    static void ApplyDarkIcon() {
-                                        QString icoPath = QCoreApplication::applicationDirPath() + "/" + FilePaths::DarkModeSvgFileICOIcon; ApplySvgIcon(icoPath);
+    static bool ApplyDarkIcon() {
+                                            QString icoPath = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::DarkModeSvgFileICOIcon);
+                                                            return ApplySvgIcon(icoPath);
                                     }
 
-    static void ApplyLightIcon() {
-                                    QString icoPath = QCoreApplication::applicationDirPath() + "/" + FilePaths::LightModeSvgFileICOIcon;ApplySvgIcon(icoPath);
+    static bool ApplyLightIcon() {
+                                    QString icoPath = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::LightModeSvgFileICOIcon);
+                                                    return ApplySvgIcon(icoPath);
                                 }
+
+    // FIX: Apply icon according to current Windows theme.
+    static bool ApplySystemSvgIcon() {
+                                            QSettings personalize(
+                                                                        "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                                                                        QSettings::NativeFormat
+                                                                    );
+
+                                            bool darkTheme = personalize.value("SystemUsesLightTheme",1).toInt() == 0;
+                                            if(darkTheme) {
+                                                                return ApplyDarkIcon();
+                                                            }
+                                            return ApplyLightIcon();
+                                    }
 };
 
 // Make App Default 
@@ -844,33 +869,28 @@ public:
                                                                                                             if(SVGStudioDataManager::GetSvgIconMode() != "system")
                                                                                                                 return;
 
-                                                                                                            ApplySystemSvgIcon();
+                                                                                                            // FIX: Apply only when Windows theme changes.
+                                                                                                            static int lastTheme = -1;
+                                                                                                            QSettings personalize(
+                                                                                                                                    "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+                                                                                                                                    QSettings::NativeFormat
+                                                                                                                                );
+
+                                                                                                            int currentTheme = personalize.value("SystemUsesLightTheme",1).toInt();
+                                                                                                            if(currentTheme != lastTheme) {
+                                                                                                                                                lastTheme = currentTheme;
+                                                                                                                                                ExplorerIconManager::ApplySystemSvgIcon();
+                                                                                                                                            }
                                                                                                         }
                                                                 );
-
-                                                systemThemeTimer->start(5000); // 1000 = 1 second
+                                                systemThemeTimer->start(1000); // 1000 = 1 second
                                             }
 
     static void ApplySystemSvgIcon() {
-                                        QSettings personalize("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",QSettings::NativeFormat);
-                                        bool darkTheme = personalize.value("AppsUseLightTheme",1).toInt() == 0;
-                                        if(darkTheme) {
-                                                            ExplorerIconManager::ApplyDarkIcon();
-                                                        }
-                                        else {
-                                                ExplorerIconManager::ApplyLightIcon();
-                                            }
+                                        ExplorerIconManager::ApplySystemSvgIcon();
                                     }
 
     static void SystemIconApply(QWidget* parent) {
-                                                    SVGStudioDataManager::SetSvgIconMode("system");
-                                                    ApplySystemSvgIcon();
-                                                    StartSystemThemeWatcher();
-                                                    QMessageBox::information(
-                                                                                parent,
-                                                                                "SVG Studio",
-                                                                                "System SVG File Icon Applied"
-                                                                            );
                                                 }
 
     static void StartupChecks() {
@@ -1988,6 +2008,7 @@ private:
     QPushButton *lightApplyButton;
     QPushButton *systemPreviewButton;
     QPushButton *systemApplyButton;
+    QPushButton *lightAppliedButton;
     QScrollArea *scrollArea;
     QLabel *defaultSvgAppLabel;
     SVGStudioToggle *defaultSvgAppToggle;
@@ -2003,6 +2024,17 @@ private:
     QVBoxLayout *generalLayout;
     QCheckBox *openWelcomePageCheckBox;
     QVBoxLayout *appearanceLayout;
+    QLabel *lightProgressLabel;
+    QLabel *lightSuccessLabel;
+    QLabel *lightAppliedLabel;
+    QMovie *lightProgressMovie;
+    QMovie *lightSuccessMovie;
+    QLabel *systemProgressLabel;
+    QLabel *systemSuccessLabel;
+    QLabel *systemAppliedLabel;
+    QMovie *systemProgressMovie;
+    QMovie *systemSuccessMovie;
+    QPushButton *systemAppliedButton;
 
 public:
     QFrame* CreateSeparator() {
@@ -2253,7 +2285,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     resetRecentAnimationLabel->setAlignment(Qt::AlignCenter);
                                     resetRecentAnimationLabel->setGeometry(2,2,36,36);
                                     resetRecentHistoryMovie = new QMovie(FilePaths::resetButtonGifPath);
-                                   resetRecentHistoryMovie->setScaledSize(resetRecentAnimationLabel->size());
+                                    resetRecentHistoryMovie->setScaledSize(resetRecentAnimationLabel->size());
                                     resetRecentAnimationLabel->setMovie(resetRecentHistoryMovie);
                                     resetRecentHistoryMovie->start();
 
@@ -2316,6 +2348,7 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     darkAppliedButton->setEnabled(false);
                                     darkAppliedButton->hide();
 
+                                    // Play  Animation and Show Applied
                                     darkProgressLabel = new QLabel;
                                     darkSuccessLabel = new QLabel;
                                     darkAppliedLabel = new QLabel("Applied");
@@ -2352,17 +2385,6 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                             darkAppliedButton->hide();
                                         }
 
-                                    // Condition - Restore Apply/Applied state from saved settings.
-                                    if(SVGStudioDataManager::GetSvgIconMode() == "dark") {
-                                                                                                darkApplyButton->hide();
-                                                                                                darkAppliedButton->show();
-                                                                                                darkApplyButton->setProperty("Applied", true);
-                                                                                            }
-                                    else {
-                                                darkApplyButton->show();
-                                                darkAppliedButton->hide();
-                                            }
-
                                     darkCard->setLayout(darkLayout);
                                     darkCard->installEventFilter(new FileIconCardHoverFilter(
                                                                                                 darkPreviewButton,
@@ -2386,8 +2408,30 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
 
                                     // Button - Apply Button
                                     lightApplyButton = new QPushButton("Apply");
+                                    lightApplyButton->setStyleSheet(Style::ApplyButtonStyle());
                                     lightApplyButton->setCursor(Qt::PointingHandCursor);
                                     lightApplyButton->setToolTip("Apply File Icon");
+
+                                    // Button - Disabled Applied Buttn for Dark file Icon
+                                    lightAppliedButton = new QPushButton("Applied");
+                                    lightAppliedButton->setToolTip("Applied");
+                                    lightAppliedButton->setIcon(QIcon(FilePaths::appliedCheckmarkPath));
+                                    lightAppliedButton->setIconSize(QSize(18,18));
+                                    lightAppliedButton->setEnabled(false);
+                                    lightAppliedButton->hide();
+
+                                    lightProgressLabel = new QLabel;
+                                    lightSuccessLabel = new QLabel;
+                                    lightAppliedLabel = new QLabel("Applied");
+                                    lightProgressMovie = new QMovie(FilePaths::progressLoaderAnimationPath);
+                                    lightSuccessMovie = new QMovie(FilePaths::successAnimationPath);
+                                    lightProgressMovie->setScaledSize(QSize(26,26));
+                                    lightSuccessMovie->setScaledSize(QSize(26,26));
+                                    lightProgressLabel->setMovie(darkProgressMovie);
+                                    lightSuccessLabel->setMovie(darkSuccessMovie);
+                                    lightProgressLabel->hide();
+                                    lightSuccessLabel->hide();
+                                    lightAppliedLabel->hide();
 
                                     lightPreviewButton->hide();
                                     lightApplyButton->hide();
@@ -2396,6 +2440,19 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     lightLayout->addStretch();
                                     lightLayout->addWidget(lightPreviewButton);
                                     lightLayout->addWidget(lightApplyButton);
+                                    lightLayout->addWidget(lightAppliedButton);
+
+                                    mode = SVGStudioDataManager::GetSvgIconMode();
+                                    if (mode == "light") {
+                                                            lightApplyButton->setProperty("Applied", true);
+                                                            lightApplyButton->hide();
+                                                            lightAppliedButton->show();
+                                                        }
+                                    else {
+                                            lightApplyButton->setProperty("Applied", false);
+                                            lightApplyButton->show();
+                                            lightAppliedButton->hide();
+                                        }
 
                                     lightCard->setLayout(lightLayout);
                                     lightCard->installEventFilter(new FileIconCardHoverFilter(
@@ -2423,6 +2480,27 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     systemApplyButton->setCursor(Qt::PointingHandCursor);
                                     systemApplyButton->setToolTip("Apply File Icon");
 
+                                    // Button - Disabled Applied Buttn for Dark file Icon
+                                    systemAppliedButton = new QPushButton("Applied");
+                                    systemAppliedButton->setToolTip("Applied");
+                                    systemAppliedButton->setIcon(QIcon(FilePaths::appliedCheckmarkPath));
+                                    systemAppliedButton->setIconSize(QSize(18,18));
+                                    systemAppliedButton->setEnabled(false);
+                                    systemAppliedButton->hide();
+
+                                    systemProgressLabel = new QLabel;
+                                    systemSuccessLabel = new QLabel;
+                                    systemAppliedLabel = new QLabel("Applied");
+                                    systemProgressMovie = new QMovie(FilePaths::progressLoaderAnimationPath);
+                                    systemSuccessMovie = new QMovie(FilePaths::successAnimationPath);
+                                    systemProgressMovie->setScaledSize(QSize(26,26));
+                                    systemSuccessMovie->setScaledSize(QSize(26,26));
+                                    systemProgressLabel->setMovie(darkProgressMovie);
+                                    systemSuccessLabel->setMovie(darkSuccessMovie);
+                                    systemProgressLabel->hide();
+                                    systemProgressLabel->hide();
+                                    systemAppliedLabel->hide();
+
                                     systemPreviewButton->hide();
                                     systemApplyButton->hide();
 
@@ -2430,6 +2508,20 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                     systemLayout->addStretch();
                                     systemLayout->addWidget(systemPreviewButton);
                                     systemLayout->addWidget(systemApplyButton);
+                                    systemLayout->addWidget(systemAppliedButton);
+
+                                    mode = SVGStudioDataManager::GetSvgIconMode();
+                                    if (mode == "system") {
+                                                            systemApplyButton->setProperty("Applied", true);
+                                                            systemApplyButton->hide();
+                                                            systemAppliedButton->show();
+                                                        }
+                                    else {
+                                            systemApplyButton->setProperty("Applied", false);
+                                            systemApplyButton->show();
+                                            systemAppliedButton->hide();
+                                        }
+
 
                                     systemCard->setLayout(systemLayout);
                                     systemCard->installEventFilter(new FileIconCardHoverFilter(
@@ -2881,18 +2973,17 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                         darkProgressMovie->start();
 
                                                                                         QApplication::processEvents();
-                                                                                        QString darkIco = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::DarkModeSvgFileICOIcon);
+                                                                                        // QString darkIco = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::DarkModeSvgFileICOIcon);
                                                                                         SVGStudioDataManager::SetSvgIconMode("dark");
 
-                                                                                        bool success = ExplorerIconManager::ApplySvgIcon(QDir::toNativeSeparators(darkIco));
+                                                                                        bool success = ExplorerIconManager::ApplyDarkIcon();
                                                                                         darkProgressMovie->stop();
                                                                                         darkProgressLabel->hide();
                                                                                         if(success) {
                                                                                                         QTimer::singleShot(1200, this, [=]() {
                                                                                                                                                     darkSuccessMovie->stop();
                                                                                                                                                     darkSuccessLabel->hide();
-                                                                                                                                                    SVGStudioSuccessDialog(
-                                                                                                                                                                                "Dark SVG File Icon Applied Successfully!").exec();
+                                                                                                                                                    SVGStudioSuccessDialog("Dark SVG File Icon Applied Successfully!").exec();
                                                                                                                                                     darkApplyButton->setProperty("Applied", true);
                                                                                                                                                     darkApplyButton->hide();
                                                                                                                                                     darkAppliedButton->show();
@@ -2906,28 +2997,79 @@ void SetupRemoveButtonStates(QPushButton* removeButton) {
                                                                                                     }
                                                                                         else {
                                                                                                 darkApplyButton->show();
-                                                                                                SVGStudioFailureDialog(
-                                                                                                                            "Unable to apply SVG File Icons."
-                                                                                                                        ).exec();
+                                                                                                SVGStudioFailureDialog("Unable to apply SVG File Icons.").exec();
                                                                                             }
                                                                                     }
                                     );
 
                             // connect - Apply Light Mod eApp File Icon in File explorer
                             connect(lightApplyButton,&QPushButton::clicked,this,[=]() {
-                                                                                           SVGStudioDataManager::SetSvgIconMode("light");
-                                                                                            ExplorerIconManager::ApplyLightIcon();
-                                                                                            QMessageBox::information(
-                                                                                                                        this,
-                                                                                                                        "SVG Studio",
-                                                                                                                        "Light File Icon Applied"
-                                                                                                                    );
+                                                                                        lightApplyButton->hide();
+                                                                                        lightProgressLabel->show();
+                                                                                        lightProgressMovie->start();
+
+                                                                                        QApplication::processEvents();
+                                                                                        // QString lightIco = QDir(QCoreApplication::applicationDirPath()).filePath(FilePaths::LightModeSvgFileICOIcon);
+                                                                                        SVGStudioDataManager::SetSvgIconMode("light");
+
+                                                                                        bool success = ExplorerIconManager::ApplyLightIcon();
+                                                                                        lightProgressLabel->show();
+                                                                                        lightProgressMovie->start();
+                                                                                        if(success) {
+                                                                                                        QTimer::singleShot(1200, this, [=]() {
+                                                                                                                                                    lightSuccessMovie->stop();
+                                                                                                                                                    lightSuccessLabel->hide();
+                                                                                                                                                    SVGStudioSuccessDialog("Light SVG File Icon Applied Successfully!").exec();
+                                                                                                                                                    lightApplyButton->setProperty("Applied", true);
+                                                                                                                                                    lightApplyButton->hide();
+                                                                                                                                                    lightAppliedButton->show();
+
+                                                                                                                                                    // Refresh UI immediately.
+                                                                                                                                                    lightAppliedButton->parentWidget()->update();
+                                                                                                                                                    lightAppliedButton->parentWidget()->repaint();
+                                                                                                                                                    QApplication::processEvents();
+                                                                                                                                                }
+                                                                                                                            );
+                                                                                                    }
+                                                                                        else {
+                                                                                                lightApplyButton->show();
+                                                                                                SVGStudioFailureDialog("Unable to apply SVG File Icons.").exec();
+                                                                                            }
                                                                                         }
                                     );
 
                             // connect - Apply Light / Dark SVG File Icon  on svg files  accoridng os
                             connect(systemApplyButton,&QPushButton::clicked,this,[=]() {
-                                                                                            Automate::SystemIconApply(this);
+                                                                                            systemApplyButton->hide();
+                                                                                            systemProgressLabel->show();
+                                                                                            systemProgressMovie->start();
+
+                                                                                            QApplication::processEvents();
+                                                                                            SVGStudioDataManager::SetSvgIconMode("system");
+                                                                                            bool success = ExplorerIconManager::ApplySystemSvgIcon();
+                                                                                            systemProgressMovie->stop();
+                                                                                            systemProgressLabel->hide();
+                                                                                            if(success) {
+                                                                                                            QTimer::singleShot(1200, this, [=]() {
+                                                                                                                                                        systemSuccessMovie->stop();
+                                                                                                                                                        systemSuccessLabel->hide();
+                                                                                                                                                        SVGStudioSuccessDialog("System SVG File Icon Applied Successfully!").exec();
+                                                                                                                                                        systemApplyButton->setProperty("Applied", true);
+                                                                                                                                                        systemApplyButton->hide();
+                                                                                                                                                        systemAppliedButton->show();
+
+                                                                                                                                                        // Refresh UI immediately.
+                                                                                                                                                        systemAppliedButton->parentWidget()->update();
+                                                                                                                                                        systemAppliedButton->parentWidget()->repaint();
+                                                                                                                                                        QApplication::processEvents();
+                                                                                                                                                    }
+                                                                                                                                );
+                                                                                                        }
+                                                                                            else {
+                                                                                                    systemApplyButton->show();
+                                                                                                    SVGStudioFailureDialog("Unable to apply SVG File Icons.").exec();
+                                                                                                }
+
                                                                                         }
                                     );
                             
@@ -3880,6 +4022,7 @@ int main(int argc, char *argv[]) {
                                                     }
                                     QLocalSocket socket;
                                     socket.connectToServer(SVGStudioInstanceManager::ServerName);
+
                                     // Condition - Chek if Ouur App Already opened  or not
                                     if(socket.waitForConnected(100)) {
                                                                         if(!startupFile.isEmpty()) {
@@ -3890,13 +4033,9 @@ int main(int argc, char *argv[]) {
 
                                                                         return 0;
                                                                     }
-
-                                    // QString startupFile;
-                                    // if(argc > 1) {
-                                    //                     startupFile = argv[1];
-                                    //                 }
                                     SVGStudioGui studio;
                                     studio.show();
+                                    Automate::StartupChecks();
                                     QLocalServer *server;
                                     server = new QLocalServer;
                                     server->listen(SVGStudioInstanceManager::ServerName);
