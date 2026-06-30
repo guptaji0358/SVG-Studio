@@ -101,37 +101,59 @@ class SVGStudioServer {
 public:
 
     static bool RunCairo(const QString &inputImage,const QString &outputSvg) {
-                                                                                cairo_surface_t *image =cairo_image_surface_create_from_png(
-                                                                                                                                                inputImage.toUtf8().constData()
-                                                                                                                                            );
+                                                                                    auto ConvertRasterImage = [&]() -> bool {
+                                                                                        QImage image(inputImage);
+                                                                                        if(image.isNull()) {
+                                                                                                                return false;
+                                                                                                            }
 
-                                                                                if(cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
-                                                                                                                                            cairo_surface_destroy(image);
-                                                                                                                                            return false;
-                                                                                                                                        }
+                                                                                        image = image.convertToFormat(QImage::Format_ARGB32);
 
-                                                                                int width  = cairo_image_surface_get_width(image);
-                                                                                int height = cairo_image_surface_get_height(image);
-                                                                                cairo_surface_t *svg = cairo_svg_surface_create(
-                                                                                                                                    outputSvg.toUtf8().constData(),
-                                                                                                                                    width,
-                                                                                                                                    height
+                                                                                        cairo_surface_t *source =
+                                                                                            cairo_image_surface_create_for_data(
+                                                                                                                                    image.bits(),
+                                                                                                                                    CAIRO_FORMAT_ARGB32,
+                                                                                                                                    image.width(),
+                                                                                                                                    image.height(),
+                                                                                                                                    image.bytesPerLine()
                                                                                                                                 );
 
-                                                                                cairo_t *cr = cairo_create(svg);
-                                                                                cairo_set_source_surface(
-                                                                                                            cr,
-                                                                                                            image,
-                                                                                                            0,
-                                                                                                            0
-                                                                                                        );
+                                                                                        if(cairo_surface_status(source) != CAIRO_STATUS_SUCCESS) {
+                                                                                                                                                    cairo_surface_destroy(source);
+                                                                                                                                                    return false;
+                                                                                                                                                }
 
-                                                                                cairo_paint(cr);
-                                                                                cairo_destroy(cr);
-                                                                                cairo_surface_destroy(svg);
-                                                                                cairo_surface_destroy(image);
-                                                                                return true;
-                                                                            }
+                                                                                        cairo_surface_t *svg = cairo_svg_surface_create(
+                                                                                                                                            outputSvg.toUtf8().constData(),
+                                                                                                                                            image.width(),
+                                                                                                                                            image.height()
+                                                                                                                                        );
+
+                                                                                        cairo_t *cr = cairo_create(svg);
+                                                                                        cairo_set_source_surface(
+                                                                                                                    cr,
+                                                                                                                    source,
+                                                                                                                    0,
+                                                                                                                    0
+                                                                                                                );
+
+                                                                                        cairo_paint(cr);
+                                                                                        cairo_destroy(cr);
+                                                                                        cairo_surface_destroy(svg);
+                                                                                        cairo_surface_destroy(source);
+                                                                                        return true;
+                                                                                    };
+
+                                                                                    QString extension = QFileInfo(inputImage).suffix().toLower();
+                                                                                    if(extension == "png"  || extension == "jpg"  ||
+                                                                                        extension == "jpeg" || extension == "bmp"  ||
+                                                                                        extension == "tif"  ||
+                                                                                        extension == "tiff" || extension == "webp") {
+                                                                                                                                        return ConvertRasterImage();
+                                                                                                                                    }
+
+                                                                                    return false;
+                                                                                }
                             };
 
 class SVGStudioInstanceManager {
@@ -1655,7 +1677,7 @@ public:
                                                                                                                                                                                                             dialog,
                                                                                                                                                                                                             "Select Image File",
                                                                                                                                                                                                             QString(),
-                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.ico)"
+                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.ico *.tiff)"
                                                                                                                                                                                                         );
                                                                                                                                                         if(!folder.isEmpty()) {
                                                                                                                                                                                     imageInput->setText(folder);
@@ -1667,39 +1689,23 @@ public:
                                                                                                                                                     QString inputPath = imageInput->text().trimmed();
                                                                                                                                                     QString outputPath = outputSvgLineEdit->text().trimmed();
                                                                                                                                                     if(inputPath.isEmpty()) {
-                                                                                                                                                                                QMessageBox::warning(
-                                                                                                                                                                                                        dialog,
-                                                                                                                                                                                                        "SVG Studio",
-                                                                                                                                                                                                        "Please select an image."
-                                                                                                                                                                                                    );
+                                                                                                                                                                                SVGStudioFailureDialog("Please select an image.").exec();
                                                                                                                                                                                 return;
                                                                                                                                                                             }
 
                                                                                                                                                     if(outputPath.isEmpty()) {
-                                                                                                                                                                                QMessageBox::warning(
-                                                                                                                                                                                                        dialog,
-                                                                                                                                                                                                        "SVG Studio",
-                                                                                                                                                                                                        "Please select an output folder."
-                                                                                                                                                                                                    );
+                                                                                                                                                                                SVGStudioFailureDialog("Please select an output folder.").exec();
                                                                                                                                                                                     return;
                                                                                                                                                                                 }
 
                                                                                                                                                     if(!QFile::exists(inputPath)) {
-                                                                                                                                                                                        QMessageBox::warning(
-                                                                                                                                                                                                                dialog,
-                                                                                                                                                                                                                "SVG Studio",
-                                                                                                                                                                                                                "Input image does not exist."
-                                                                                                                                                                                                            );
+                                                                                                                                                                                        SVGStudioFailureDialog("Input image does not exist.").exec();
                                                                                                                                                                                         return;
                                                                                                                                                                                     }
 
                                                                                                                                                     QDir outputDir(outputPath);
                                                                                                                                                     if(!outputDir.exists()) {
-                                                                                                                                                                                QMessageBox::warning(
-                                                                                                                                                                                                        dialog,
-                                                                                                                                                                                                        "SVG Studio",
-                                                                                                                                                                                                        "Output folder does not exist."
-                                                                                                                                                                                                    );
+                                                                                                                                                                                SVGStudioFailureDialog("Output folder does not exist.").exec();
                                                                                                                                                                                 return;
                                                                                                                                                                             }
 
@@ -1710,6 +1716,7 @@ public:
                                                                                                                                                                                         "jpeg",
                                                                                                                                                                                         "bmp",
                                                                                                                                                                                         "webp",
+                                                                                                                                                                                        "tiff",
                                                                                                                                                                                         "ico"
                                                                                                                                                                                     };
 
