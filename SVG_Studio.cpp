@@ -61,6 +61,8 @@ Project - SVG Studio
 #include<QProcess>
 #include <opencv2/opencv.hpp>
 #include<QComboBox>
+#include<cairo.h>
+#include<cairo-svg.h>
 
 // Paths Collection class
 class FilePaths {
@@ -92,6 +94,45 @@ public:
                     static inline const QString DataFileName ="/SVGStudioData.json";
                     static inline const QString VTracerExe = "/Tools/vtracer.exe";
                 };
+
+// Engine
+class SVGStudioServer {
+
+public:
+
+    static bool RunCairo(const QString &inputImage,const QString &outputSvg) {
+                                                                                cairo_surface_t *image =cairo_image_surface_create_from_png(
+                                                                                                                                                inputImage.toUtf8().constData()
+                                                                                                                                            );
+
+                                                                                if(cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
+                                                                                                                                            cairo_surface_destroy(image);
+                                                                                                                                            return false;
+                                                                                                                                        }
+
+                                                                                int width  = cairo_image_surface_get_width(image);
+                                                                                int height = cairo_image_surface_get_height(image);
+                                                                                cairo_surface_t *svg = cairo_svg_surface_create(
+                                                                                                                                    outputSvg.toUtf8().constData(),
+                                                                                                                                    width,
+                                                                                                                                    height
+                                                                                                                                );
+
+                                                                                cairo_t *cr = cairo_create(svg);
+                                                                                cairo_set_source_surface(
+                                                                                                            cr,
+                                                                                                            image,
+                                                                                                            0,
+                                                                                                            0
+                                                                                                        );
+
+                                                                                cairo_paint(cr);
+                                                                                cairo_destroy(cr);
+                                                                                cairo_surface_destroy(svg);
+                                                                                cairo_surface_destroy(image);
+                                                                                return true;
+                                                                            }
+                            };
 
 class SVGStudioInstanceManager {
 public:
@@ -754,10 +795,12 @@ public:
                                                                                                 QLabel *animationLabel = new QLabel();
                                                                                                 animationLabel->setMinimumSize(320,320);
                                                                                                 animationLabel->setAlignment(Qt::AlignCenter);
-
+                                                                                                
                                                                                                 QMovie *movie = new QMovie(FilePaths::failureAnimationPath);
                                                                                                 movie->setScaledSize(QSize(320,320));
+                                                                                                movie->setCacheMode(QMovie::CacheAll);
                                                                                                 animationLabel->setMovie(movie);
+                                                                                                connect(movie,&QMovie::finished,this,&QDialog::accept);
                                                                                                 movie->start();
 
                                                                                                 QLabel *messageLabel = new QLabel(message);
@@ -775,7 +818,8 @@ public:
                                                                                                 layout->addWidget(messageLabel);
                                                                                                 layout->addStretch();
                                                                                                 QTimer::singleShot(
-                                                                                                                        movie->nextFrameDelay() * movie->frameCount(),
+                                                                                                                        // movie->nextFrameDelay() * movie->frameCount(),
+                                                                                                                        2000,
                                                                                                                         this,
                                                                                                                         &QDialog::accept
                                                                                                                     );
@@ -1621,77 +1665,86 @@ public:
                                                                                                 );
 
                                                                             QObject::connect(convertButton,&QPushButton::clicked,dialog,[=]() {
-                                                                                                                                                QString inputPath = imageInput->text().trimmed();
-                                                                                                                                                QString outputPath = outputSvgLineEdit->text().trimmed();
-                                                                                                                                                if(inputPath.isEmpty()) {
-                                                                                                                                                                            QMessageBox::warning(
-                                                                                                                                                                                                    dialog,
-                                                                                                                                                                                                    "SVG Studio",
-                                                                                                                                                                                                    "Please select an image."
-                                                                                                                                                                                                );
-                                                                                                                                                                            return;
-                                                                                                                                                                        }
-
-                                                                                                                                                if(outputPath.isEmpty()) {
-                                                                                                                                                                            QMessageBox::warning(
-                                                                                                                                                                                                    dialog,
-                                                                                                                                                                                                    "SVG Studio",
-                                                                                                                                                                                                    "Please select an output folder."
-                                                                                                                                                                                                );
+                                                                                                                                                    QString inputPath = imageInput->text().trimmed();
+                                                                                                                                                    QString outputPath = outputSvgLineEdit->text().trimmed();
+                                                                                                                                                    if(inputPath.isEmpty()) {
+                                                                                                                                                                                QMessageBox::warning(
+                                                                                                                                                                                                        dialog,
+                                                                                                                                                                                                        "SVG Studio",
+                                                                                                                                                                                                        "Please select an image."
+                                                                                                                                                                                                    );
                                                                                                                                                                                 return;
                                                                                                                                                                             }
 
-                                                                                                                                                if(!QFile::exists(inputPath)) {
-                                                                                                                                                                                    QMessageBox::warning(
-                                                                                                                                                                                                            dialog,
-                                                                                                                                                                                                            "SVG Studio",
-                                                                                                                                                                                                            "Input image does not exist."
-                                                                                                                                                                                                        );
+                                                                                                                                                    if(outputPath.isEmpty()) {
+                                                                                                                                                                                QMessageBox::warning(
+                                                                                                                                                                                                        dialog,
+                                                                                                                                                                                                        "SVG Studio",
+                                                                                                                                                                                                        "Please select an output folder."
+                                                                                                                                                                                                    );
                                                                                                                                                                                     return;
                                                                                                                                                                                 }
 
-                                                                                                                                                QDir outputDir(outputPath);
-                                                                                                                                                if(!outputDir.exists()) {
-                                                                                                                                                                            QMessageBox::warning(
-                                                                                                                                                                                                    dialog,
-                                                                                                                                                                                                    "SVG Studio",
-                                                                                                                                                                                                    "Output folder does not exist."
+                                                                                                                                                    if(!QFile::exists(inputPath)) {
+                                                                                                                                                                                        QMessageBox::warning(
+                                                                                                                                                                                                                dialog,
+                                                                                                                                                                                                                "SVG Studio",
+                                                                                                                                                                                                                "Input image does not exist."
+                                                                                                                                                                                                            );
+                                                                                                                                                                                        return;
+                                                                                                                                                                                    }
+
+                                                                                                                                                    QDir outputDir(outputPath);
+                                                                                                                                                    if(!outputDir.exists()) {
+                                                                                                                                                                                QMessageBox::warning(
+                                                                                                                                                                                                        dialog,
+                                                                                                                                                                                                        "SVG Studio",
+                                                                                                                                                                                                        "Output folder does not exist."
+                                                                                                                                                                                                    );
+                                                                                                                                                                                return;
+                                                                                                                                                                            }
+
+                                                                                                                                                    QString extension = QFileInfo(inputPath).suffix().toLower();
+                                                                                                                                                    QStringList supportedFormats = {
+                                                                                                                                                                                        "png",
+                                                                                                                                                                                        "jpg",
+                                                                                                                                                                                        "jpeg",
+                                                                                                                                                                                        "bmp",
+                                                                                                                                                                                        "webp",
+                                                                                                                                                                                        "ico"
+                                                                                                                                                                                    };
+
+                                                                                                                                                    if(!supportedFormats.contains(extension)) {
+                                                                                                                                                                                                    QMessageBox::warning(
+                                                                                                                                                                                                                            dialog,
+                                                                                                                                                                                                                            "SVG Studio",
+                                                                                                                                                                                                                            "Unsupported image format."
+                                                                                                                                                                                                                        );
+                                                                                                                                                                                                    return;
+                                                                                                                                                                                                }
+
+                                                                                                                                                    QString quality = "Balanced";
+                                                                                                                                                    if(qualityFastRadioButton->isChecked()) {
+                                                                                                                                                                                                quality = "Fast";
+                                                                                                                                                                                            }
+                                                                                                                                                    else if(qualityBestRadioButton->isChecked()) {
+                                                                                                                                                                                                    quality = "Best";
+                                                                                                                                                                                                }
+                                                                                                                                                    QString outputSvg = QDir(outputPath).filePath(
+                                                                                                                                                                                                    QFileInfo(inputPath).completeBaseName() + ".svg"
                                                                                                                                                                                                 );
-                                                                                                                                                                            return;
-                                                                                                                                                                        }
 
-                                                                                                                                                QString extension = QFileInfo(inputPath).suffix().toLower();
-                                                                                                                                                QStringList supportedFormats = {
-                                                                                                                                                                                    "png",
-                                                                                                                                                                                    "jpg",
-                                                                                                                                                                                    "jpeg",
-                                                                                                                                                                                    "bmp",
-                                                                                                                                                                                    "webp",
-                                                                                                                                                                                    "ico"
-                                                                                                                                                                                };
+                                                                                                                                                    bool success = SVGStudioServer::RunCairo(
+                                                                                                                                                                                                    inputPath,
+                                                                                                                                                                                                    outputSvg
+                                                                                                                                                                                                );
 
-                                                                                                                                                if(!supportedFormats.contains(extension)) {
-                                                                                                                                                                                                QMessageBox::warning(
-                                                                                                                                                                                                                        dialog,
-                                                                                                                                                                                                                        "SVG Studio",
-                                                                                                                                                                                                                        "Unsupported image format."
-                                                                                                                                                                                                                    );
-                                                                                                                                                                                                return;
-                                                                                                                                                                                            }
-
-                                                                                                                                                QString quality = "Balanced";
-                                                                                                                                                if(qualityFastRadioButton->isChecked()) {
-                                                                                                                                                                                            quality = "Fast";
-                                                                                                                                                                                        }
-                                                                                                                                                else if(qualityBestRadioButton->isChecked()) {
-                                                                                                                                                                                                quality = "Best";
-                                                                                                                                                                                            }
-                                                                                                                                                RunVTracer(
-                                                                                                                                                            imageInput->text(),
-                                                                                                                                                            outputSvgLineEdit->text(),
-                                                                                                                                                            quality,
-                                                                                                                                                            compareOrginalwithGnnerated->isChecked()
-                                                                                                                                                        );
+                                                                                                                                                    if(!success) {
+                                                                                                                                                                    SVGStudioFailureDialog("Failed to convert SVG").exec();
+                                                                                                                                                                }
+                                                                                                                                                    else {
+                                                                                                                                                            SVGStudioSuccessDialog("Successfully Created SVG").exec();
+                                                                                                                                                        }
                                                                                                                                             }
                                                                                             );
                                                                             };
@@ -1705,147 +1758,147 @@ public:
                                         delete dialog;
                                     }
 
-    // Run VTracer conversion
-    void RunVTracer(QString inputImage,QString outputFolder,QString quality,bool compareResult) {
-                                                                                    QDialog loadingDialog;
-                                                                                    loadingDialog.setWindowFlags(
-                                                                                                                    Qt::Dialog |
-                                                                                                                    Qt::FramelessWindowHint
-                                                                                                                );
-                                                                                    loadingDialog.setModal(true);
-                                                                                    loadingDialog.setFixedSize(320,320);
+    // Test -  VTracer conversion
+    // void RunVTracer(QString inputImage,QString outputFolder,QString quality,bool compareResult) {
+    //                                                                                 QDialog loadingDialog;
+    //                                                                                 loadingDialog.setWindowFlags(
+    //                                                                                                                 Qt::Dialog |
+    //                                                                                                                 Qt::FramelessWindowHint
+    //                                                                                                             );
+    //                                                                                 loadingDialog.setModal(true);
+    //                                                                                 loadingDialog.setFixedSize(320,320);
 
-                                                                                    QVBoxLayout *layout = new QVBoxLayout(&loadingDialog);
-                                                                                    QLabel *loader = new QLabel();
-                                                                                    loader->setMinimumSize(320,320);
-                                                                                    loader->setAlignment(Qt::AlignCenter);
+    //                                                                                 QVBoxLayout *layout = new QVBoxLayout(&loadingDialog);
+    //                                                                                 QLabel *loader = new QLabel();
+    //                                                                                 loader->setMinimumSize(320,320);
+    //                                                                                 loader->setAlignment(Qt::AlignCenter);
 
-                                                                                    QMovie *movie = new QMovie(FilePaths::progressLoaderAnimationPath);
-                                                                                    movie->setScaledSize(QSize(320,320));
-                                                                                    loader->setMovie(movie);
-                                                                                    movie->start();
+    //                                                                                 QMovie *movie = new QMovie(FilePaths::progressLoaderAnimationPath);
+    //                                                                                 movie->setScaledSize(QSize(320,320));
+    //                                                                                 loader->setMovie(movie);
+    //                                                                                 movie->start();
 
-                                                                                    QLabel *text = new QLabel("Converting Image...");
-                                                                                    text->setAlignment(Qt::AlignCenter);
-                                                                                    layout->addStretch();
-                                                                                    layout->addWidget(loader,0,Qt::AlignCenter);
-                                                                                    layout->addSpacing(5);
-                                                                                    layout->addWidget(text);
-                                                                                    layout->addStretch();
-                                                                                    loadingDialog.show();
-                                                                                    QApplication::processEvents();
-                                                                                    inputImage = logic.PrepareImageForTracing(inputImage, quality);
+    //                                                                                 QLabel *text = new QLabel("Converting Image...");
+    //                                                                                 text->setAlignment(Qt::AlignCenter);
+    //                                                                                 layout->addStretch();
+    //                                                                                 layout->addWidget(loader,0,Qt::AlignCenter);
+    //                                                                                 layout->addSpacing(5);
+    //                                                                                 layout->addWidget(text);
+    //                                                                                 layout->addStretch();
+    //                                                                                 loadingDialog.show();
+    //                                                                                 QApplication::processEvents();
+    //                                                                                 inputImage = logic.PrepareImageForTracing(inputImage, quality);
 
-                                                                                    QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
-                                                                                    QString tempSvg = QDir::tempPath() + "/SVGStudio_Temp.svg";
-                                                                                    QString preset = "photo";
+    //                                                                                 QString program = QCoreApplication::applicationDirPath() + FilePaths::VTracerExe;
+    //                                                                                 QString tempSvg = QDir::tempPath() + "/SVGStudio_Temp.svg";
+    //                                                                                 QString preset = "photo";
 
-                                                                                    QStringList arguments;
-                                                                                    arguments
-                                                                                                << "--input" << inputImage
-                                                                                                << "--output" << tempSvg
-                                                                                                << "--mode" << "spline";
+    //                                                                                 QStringList arguments;
+    //                                                                                 arguments
+    //                                                                                             << "--input" << inputImage
+    //                                                                                             << "--output" << tempSvg
+    //                                                                                             << "--mode" << "spline";
 
-                                                                                    if (quality == "Fast") {
-                                                                                                                arguments
-                                                                                                                    <<"--filter_speckle"<<"8"
-                                                                                                                    <<"--color_precision"<<"6"
-                                                                                                                    <<"--gradient_step"<<"8"
-                                                                                                                    <<"--corner_threshold"<<"80"
-                                                                                                                    <<"--segment_length"<<"8"
-                                                                                                                    <<"--splice_threshold"<<"45"
-                                                                                                                    <<"--path_precision"<<"2";
-                                                                                                            }
-                                                                                    else if (quality == "Balanced") {
-                                                                                                                        arguments
-                                                                                                                            <<"--filter_speckle"<<"4"
-                                                                                                                            <<"--color_precision"<<"8"
-                                                                                                                            <<"--gradient_step"<<"4"
-                                                                                                                            <<"--corner_threshold"<<"10"
-                                                                                                                            <<"--segment_length"<<"5"
-                                                                                                                            <<"--splice_threshold"<<"30"
-                                                                                                                            <<"--path_precision"<<"4";
-                                                                                                                    }
-                                                                                    else if (quality == "Best") {
-                                                                                                                    arguments
-                                                                                                                        <<"--filter_speckle"<<"1"
-                                                                                                                        <<"--color_precision"<<"8"
-                                                                                                                        <<"--gradient_step"<<"1"
-                                                                                                                        <<"--corner_threshold"<<"175"
-                                                                                                                        << "--segment_length" << "3.5"
-                                                                                                                        <<"--splice_threshold"<<"10"
-                                                                                                                        <<"--path_precision"<<"8";
-                                                                                                                }
+    //                                                                                 if (quality == "Fast") {
+    //                                                                                                             arguments
+    //                                                                                                                 <<"--filter_speckle"<<"8"
+    //                                                                                                                 <<"--color_precision"<<"6"
+    //                                                                                                                 <<"--gradient_step"<<"8"
+    //                                                                                                                 <<"--corner_threshold"<<"80"
+    //                                                                                                                 <<"--segment_length"<<"8"
+    //                                                                                                                 <<"--splice_threshold"<<"45"
+    //                                                                                                                 <<"--path_precision"<<"2";
+    //                                                                                                         }
+    //                                                                                 else if (quality == "Balanced") {
+    //                                                                                                                     arguments
+    //                                                                                                                         <<"--filter_speckle"<<"4"
+    //                                                                                                                         <<"--color_precision"<<"8"
+    //                                                                                                                         <<"--gradient_step"<<"4"
+    //                                                                                                                         <<"--corner_threshold"<<"10"
+    //                                                                                                                         <<"--segment_length"<<"5"
+    //                                                                                                                         <<"--splice_threshold"<<"30"
+    //                                                                                                                         <<"--path_precision"<<"4";
+    //                                                                                                                 }
+    //                                                                                 else if (quality == "Best") {
+    //                                                                                                                 arguments
+    //                                                                                                                     <<"--filter_speckle"<<"1"
+    //                                                                                                                     <<"--color_precision"<<"8"
+    //                                                                                                                     <<"--gradient_step"<<"1"
+    //                                                                                                                     <<"--corner_threshold"<<"175"
+    //                                                                                                                     << "--segment_length" << "3.5"
+    //                                                                                                                     <<"--splice_threshold"<<"10"
+    //                                                                                                                     <<"--path_precision"<<"8";
+    //                                                                                                             }
 
-                                                                                    QProcess process;
-                                                                                    process.start(program,arguments);
-                                                                                    while (!process.waitForFinished(50)) {
-                                                                                                                                QApplication::processEvents();
-                                                                                                                            }
+    //                                                                                 QProcess process;
+    //                                                                                 process.start(program,arguments);
+    //                                                                                 while (!process.waitForFinished(50)) {
+    //                                                                                                                             QApplication::processEvents();
+    //                                                                                                                         }
 
-                                                                                    loadingDialog.close();
-                                                                                    if(process.exitStatus() != QProcess::NormalExit) {
-                                                                                                                                        QMessageBox::critical(
-                                                                                                                                                                nullptr,
-                                                                                                                                                                "SVG Studio",
-                                                                                                                                                                "Failed to start VTracer."
-                                                                                                                                                            );
-                                                                                                                                        return;
-                                                                                                                                    }
+    //                                                                                 loadingDialog.close();
+    //                                                                                 if(process.exitStatus() != QProcess::NormalExit) {
+    //                                                                                                                                     QMessageBox::critical(
+    //                                                                                                                                                             nullptr,
+    //                                                                                                                                                             "SVG Studio",
+    //                                                                                                                                                             "Failed to start VTracer."
+    //                                                                                                                                                         );
+    //                                                                                                                                     return;
+    //                                                                                                                                 }
 
-                                                                                    loadingDialog.close();
-                                                                                    if(process.exitCode() != 0) {
-                                                                                                                    QMessageBox::critical(
-                                                                                                                                            nullptr,
-                                                                                                                                            "SVG Studio",
-                                                                                                                                            process.readAllStandardError()
-                                                                                                                                        );
-                                                                                                                    return;
-                                                                                                                }
+    //                                                                                 loadingDialog.close();
+    //                                                                                 if(process.exitCode() != 0) {
+    //                                                                                                                 QMessageBox::critical(
+    //                                                                                                                                         nullptr,
+    //                                                                                                                                         "SVG Studio",
+    //                                                                                                                                         process.readAllStandardError()
+    //                                                                                                                                     );
+    //                                                                                                                 return;
+    //                                                                                                             }
 
-                                                                                    loadingDialog.close();
+    //                                                                                 loadingDialog.close();
 
-                                                                                    if(compareResult) {
-                                                                                                            ShowCompareWindow(
-                                                                                                                                inputImage,
-                                                                                                                                tempSvg,
-                                                                                                                                outputFolder
-                                                                                                                            );
-                                                                                                            return;
-                                                                                                        }
-                                                                                    QDialog successDialog;
-                                                                                    successDialog.setWindowFlags(
-                                                                                                                    Qt::Dialog |
-                                                                                                                    Qt::FramelessWindowHint
-                                                                                                                );
+    //                                                                                 if(compareResult) {
+    //                                                                                                         ShowCompareWindow(
+    //                                                                                                                             inputImage,
+    //                                                                                                                             tempSvg,
+    //                                                                                                                             outputFolder
+    //                                                                                                                         );
+    //                                                                                                         return;
+    //                                                                                                     }
+    //                                                                                 QDialog successDialog;
+    //                                                                                 successDialog.setWindowFlags(
+    //                                                                                                                 Qt::Dialog |
+    //                                                                                                                 Qt::FramelessWindowHint
+    //                                                                                                             );
 
-                                                                                    successDialog.setModal(true);
-                                                                                    successDialog.setFixedSize(360,320);
-                                                                                    QVBoxLayout *successLayout = new QVBoxLayout(&successDialog);
-                                                                                    QLabel *successGif = new QLabel();
-                                                                                    successGif->setAlignment(Qt::AlignCenter);
+    //                                                                                 successDialog.setModal(true);
+    //                                                                                 successDialog.setFixedSize(360,320);
+    //                                                                                 QVBoxLayout *successLayout = new QVBoxLayout(&successDialog);
+    //                                                                                 QLabel *successGif = new QLabel();
+    //                                                                                 successGif->setAlignment(Qt::AlignCenter);
 
-                                                                                    QMovie *successMovie = new QMovie(":/Assets/SUCCESS.gif");
-                                                                                    successMovie->setScaledSize(QSize(180,180));
-                                                                                    successGif->setMovie(successMovie);
-                                                                                    successMovie->start();
+    //                                                                                 QMovie *successMovie = new QMovie(":/Assets/SUCCESS.gif");
+    //                                                                                 successMovie->setScaledSize(QSize(180,180));
+    //                                                                                 successGif->setMovie(successMovie);
+    //                                                                                 successMovie->start();
 
-                                                                                    // Disappear the window after 2 seconds
-                                                                                    QTimer::singleShot(5000,&successDialog,&QDialog::accept);
+    //                                                                                 // Disappear the window after 2 seconds
+    //                                                                                 QTimer::singleShot(5000,&successDialog,&QDialog::accept);
 
-                                                                                    QLabel *successText = new QLabel("SVG Created Successfully!");
-                                                                                    successText->setAlignment(Qt::AlignCenter);
-                                                                                    successText->setStyleSheet("font-size:18px;""font-weight:bold;""color:white;");
+    //                                                                                 QLabel *successText = new QLabel("SVG Created Successfully!");
+    //                                                                                 successText->setAlignment(Qt::AlignCenter);
+    //                                                                                 successText->setStyleSheet("font-size:18px;""font-weight:bold;""color:white;");
 
-                                                                                    successLayout->addStretch();
-                                                                                    successLayout->addWidget(successGif,0,Qt::AlignCenter);
-                                                                                    successLayout->addSpacing(10);
-                                                                                    successLayout->addWidget(successText);
-                                                                                    successLayout->addSpacing(15);
-                                                                                    successLayout->addStretch();
+    //                                                                                 successLayout->addStretch();
+    //                                                                                 successLayout->addWidget(successGif,0,Qt::AlignCenter);
+    //                                                                                 successLayout->addSpacing(10);
+    //                                                                                 successLayout->addWidget(successText);
+    //                                                                                 successLayout->addSpacing(15);
+    //                                                                                 successLayout->addStretch();
 
-                                                                                    successDialog.exec();
-                                                                            }
+    //                                                                                 successDialog.exec();
+    //                                                                         }
 
     // Compare Dialog
     void ShowCompareWindow(QString originalImage,QString tempSvg,QString outputFolder) {

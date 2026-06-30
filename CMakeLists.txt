@@ -5,14 +5,9 @@ project(SVGStudio LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(
-    Qt6 REQUIRED
-    COMPONENTS
-        Widgets
-        SvgWidgets
-        Network
-)
-
+find_package(Qt6 REQUIRED COMPONENTS Widgets SvgWidgets Network)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(CAIRO REQUIRED cairo)
 find_package(OpenCV REQUIRED)
 
 qt_standard_project_setup()
@@ -40,7 +35,6 @@ qt_add_resources(SVGStudio app_resources
         Assets/GLOW_RED_REMOVE.svg
         Assets/DARK_MODE_SVG_FILE_ICON.svg
         Assets/LIGHT_MODE_SVG_FILE_ICON.svg
-        Assets/LIGHT_MODE_SVG_FILE_ICON.svg
         Assets/PROGRESS_LOADER.gif
         Assets/SUCCESS.gif
         Assets/TRASH_BUTTON_ICON.png
@@ -48,8 +42,10 @@ qt_add_resources(SVGStudio app_resources
         Assets/RESET_BUTTON.gif
         Assets/FAILURE.gif
         Assets/APPLIED_CHECKMARK.svg
-        DARK_MODE_SVG_FILE_ICON.ico
-        LIGHT_MODE_SVG_FILE_ICON.ico
+)
+
+target_include_directories(SVGStudio PRIVATE
+    ${CAIRO_INCLUDE_DIRS}
 )
 
 target_link_libraries(SVGStudio PRIVATE
@@ -57,12 +53,10 @@ target_link_libraries(SVGStudio PRIVATE
     Qt6::SvgWidgets
     Qt6::Network
     ${OpenCV_LIBS}
+    ${CAIRO_LIBRARIES}
 )
 
 set_target_properties(SVGStudio PROPERTIES
     OUTPUT_NAME "SVG Studio"
-)
-
-set_target_properties(SVGStudio PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
