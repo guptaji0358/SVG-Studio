@@ -145,12 +145,16 @@ public:
                                                                                     };
 
                                                                                     QString extension = QFileInfo(inputImage).suffix().toLower();
-                                                                                    if(extension == "png"  || extension == "jpg"  ||
-                                                                                        extension == "jpeg" || extension == "bmp"  ||
+                                                                                    if (extension == "png"  ||
+                                                                                        extension == "jpg"  ||
+                                                                                        extension == "jpeg" ||
+                                                                                        extension == "bmp"  ||
+                                                                                        extension == "webp" ||
                                                                                         extension == "tif"  ||
-                                                                                        extension == "tiff" || extension == "webp") {
-                                                                                                                                        return ConvertRasterImage();
-                                                                                                                                    }
+                                                                                        extension == "tiff" ||
+                                                                                        extension == "ico") {
+                                                                                                                return ConvertRasterImage();
+                                                                                                            }
 
                                                                                     return false;
                                                                                 }
@@ -1677,7 +1681,7 @@ public:
                                                                                                                                                                                                             dialog,
                                                                                                                                                                                                             "Select Image File",
                                                                                                                                                                                                             QString(),
-                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.ico *.tiff)"
+                                                                                                                                                                                                            "Images (*.png *.jpg *.jpeg *.bmp *.webp *.ico *.tiff *.tif)"
                                                                                                                                                                                                         );
                                                                                                                                                         if(!folder.isEmpty()) {
                                                                                                                                                                                     imageInput->setText(folder);
@@ -1717,15 +1721,12 @@ public:
                                                                                                                                                                                         "bmp",
                                                                                                                                                                                         "webp",
                                                                                                                                                                                         "tiff",
+                                                                                                                                                                                        "tif",
                                                                                                                                                                                         "ico"
                                                                                                                                                                                     };
 
                                                                                                                                                     if(!supportedFormats.contains(extension)) {
-                                                                                                                                                                                                    QMessageBox::warning(
-                                                                                                                                                                                                                            dialog,
-                                                                                                                                                                                                                            "SVG Studio",
-                                                                                                                                                                                                                            "Unsupported image format."
-                                                                                                                                                                                                                        );
+                                                                                                                                                                                                    SVGStudioFailureDialog("Unsupported image format.").exec();
                                                                                                                                                                                                     return;
                                                                                                                                                                                                 }
 
