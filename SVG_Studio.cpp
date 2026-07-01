@@ -61,6 +61,7 @@ Project - SVG Studio
 #include<QProcess>
 #include <opencv2/opencv.hpp>
 #include<QComboBox>
+#include<QThread>
 #include<cairo.h>
 #include<cairo-svg.h>
 
@@ -95,6 +96,108 @@ public:
                     static inline const QString VTracerExe = "/Tools/vtracer.exe";
                 };
 
+// Scanner
+// ======================================================
+// SVG Studio Scanner
+// Purpose : Scan folders for supported files.
+// Topic   : Static Utility Class
+// ======================================================
+
+class SVGStudioScanner {
+public:
+    // Scan Files
+    static QStringList ScanFiles(const QStringList &rootFolders,const QStringList &extensions) {
+                                                                                                    QStringList results;
+                                                                                                    for(const QString &folder : rootFolders) {
+                                                                                                                                                    ScanFolder(
+                                                                                                                                                                folder,
+                                                                                                                                                                extensions,
+                                                                                                                                                                results
+                                                                                                                                                            );
+                                                                                                                                                }
+                                                                                                    return results;
+                                                                                                }
+
+    // Get All Available Drives
+    static QStringList GetAvailableDrives() {
+                                                QStringList drives;
+                                                for(const QFileInfo &drive:QDir::drives()) {
+                                                                                                drives.append(
+                                                                                                                drive.absoluteFilePath()
+                                                                                                            );
+                                                                                            }
+                                                return drives;
+                                            }
+
+private:
+    // Recursive Folder Scanner
+    static void ScanFolder(const QString &folder,const QStringList &extensions,QStringList &results) {
+                                                                                                        QDir directory(folder);
+                                                                                                            if(!directory.exists()) {
+                                                                                                                                        return;
+                                                                                                                                    }
+                                                                                                            QFileInfoList entries = directory.entryInfoList(
+                                                                                                                                                                QDir::Dirs |
+                                                                                                                                                                QDir::Files |
+                                                                                                                                                                QDir::NoDotAndDotDot
+                                                                                                                                                        );
+                                                                                                            for(const QFileInfo &entry : entries) {
+                                                                                                                // Folder
+                                                                                                                if(entry.isDir()) {
+                                                                                                                                        ScanFolder(
+                                                                                                                                                    entry.absoluteFilePath(),
+                                                                                                                                                    extensions,
+                                                                                                                                                    results
+                                                                                                                                                );
+                                                                                                                                        continue;
+                                                                                                                                    }
+                                                                                                                // File
+                                                                                                                QString extension = entry.suffix().toLower();
+                                                                                                                if(extensions.contains(extension)) {
+                                                                                                                                                        results.append(
+                                                                                                                                                                        entry.absoluteFilePath()
+                                                                                                                                                                    );
+                                                                                                                                                    }
+                                                                                                            }
+                                                                                                        }
+};
+
+// Indexer
+class SVGStudioIndexer {
+public:
+    static QStringList ImageFiles;
+    static void Start() {
+                            QThread *thread = QThread::create([]() {
+                                                                        ImageFiles = SVGStudioScanner::ScanFiles(
+                                                                                                                    SVGStudioScanner::GetAvailableDrives(), {
+                                                                                                                                                                "png",
+                                                                                                                                                                "jpg",
+                                                                                                                                                                "jpeg",
+                                                                                                                                                                "bmp",
+                                                                                                                                                                "webp",
+                                                                                                                                                                "tif",
+                                                                                                                                                                "tiff",
+                                                                                                                                                                "ico"
+                                                                                                                                                            }
+                                                                                                                );
+                                                                    }
+                                                            );
+
+                            QObject::connect(thread,&QThread::finished,thread,&QObject::deleteLater);
+                            thread->start();
+                        }
+
+    static QString FindImage(const QString &fileName) {
+                                                            for(const QString &path : ImageFiles) {
+                                                                                                        if(QFileInfo(path).fileName().compare(fileName,Qt::CaseInsensitive) == 0) {
+                                                                                                                                                                                        return path;
+                                                                                                                                                                                    }
+                                                                                                    }
+                                                            return "";
+                                                        }
+
+};
+QStringList SVGStudioIndexer::ImageFiles;
 // Engine
 class SVGStudioServer {
 
@@ -1517,8 +1620,14 @@ public:
                                         auto inputImageLabel = (QLabel*)nullptr;
                                         auto outputSvgLabel = (QLabel*)nullptr;
                                         auto qualityLabel = (QLabel*)nullptr;
+                                        auto imageNameLabel = (QLabel*)nullptr;
+                                        auto inputImportLabel = (QLabel*)nullptr;
+                                        auto outputExportLabel = (QLabel*)nullptr;
+                                        auto svgFileNameLabel = (QLabel*)nullptr;
                                         auto imageInput = (QLineEdit*)nullptr;
                                         auto outputSvgLineEdit = (QLineEdit*)nullptr;
+                                        auto imageNameLineEdit = (QLineEdit*)nullptr;
+                                        auto svgFileNameLineEdit = (QLineEdit*)nullptr;
                                         auto broseButton = (QPushButton*)nullptr;
                                         auto browseOutputButton = (QPushButton*)nullptr;
                                         auto cancelButton = (QPushButton*)nullptr;
@@ -1534,29 +1643,52 @@ public:
                                         auto svgOutputLayout = (QHBoxLayout*)nullptr;
                                         auto qualityLayout = (QHBoxLayout*)nullptr;
                                         auto cancelAndCovertButtonLayout = (QHBoxLayout*)nullptr;
+                                        auto imageNameLayout = new QHBoxLayout;
+                                        auto svgNameLayout = new QHBoxLayout;
                                         auto pathGroup = (QButtonGroup*)nullptr;
-
+                                        
                                         auto CreateWidgets = [&]() {
-                                                                        dialog->setWindowTitle("Convert To SVG");
+                                                                        dialog->setWindowTitle("Convert To SVG from Image");
                                                                         dialog->resize(800,600);
 
                                                                         // Label - Title Label
-                                                                        titleLabel = new QLabel("Convert To SVG");
+                                                                        titleLabel = new QLabel("Convert To SVG from Image");
+                                                                        titleLabel->setToolTip("Convert To SVG from Image");
 
-                                                                        inputImageLabel = new QLabel("Imge Location");
+                                                                        // Label - Import
+                                                                        inputImportLabel = new QLabel("IMPORT");
+                                                                        inputImportLabel->setToolTip("IMPORT");
+
+                                                                        // Input - Input of Image File Name
+                                                                        imageNameLabel = new QLabel("Image Name :");
+                                                                        imageNameLabel->setToolTip("Enter Your Image Name");
+
+                                                                        imageNameLineEdit = new QLineEdit();
+
+                                                                        inputImageLabel = new QLabel("Image Location");
+                                                                        inputImageLabel->setToolTip("Enter Image Location");
 
                                                                         // Input - Input of resourses
                                                                         imageInput = new QLineEdit();
 
-                                                                        outputSvgLabel = new QLabel("Output");
-
-                                                                        outputSvgLineEdit = new QLineEdit();
-
-
-                                                                        // Button - Browse Button
+                                                                        // Button - Input Browse Button
                                                                         broseButton = new QPushButton("Browse");
                                                                         broseButton->setCursor(Qt::PointingHandCursor);
                                                                         broseButton->setToolTip("Browse");
+
+                                                                        svgFileNameLabel = new QLabel("SVG File Name :");
+                                                                        svgFileNameLabel->setToolTip("Enter Your SVG Name");
+
+                                                                        // Label - EXPORT
+                                                                        outputExportLabel = new QLabel("EXPORT");
+                                                                        outputExportLabel->setToolTip("EXPORT");
+
+                                                                        svgFileNameLineEdit = new QLineEdit();
+
+                                                                        outputSvgLabel = new QLabel("SVG File Location");
+                                                                        outputSvgLabel->setToolTip("SVG File Location");
+
+                                                                        outputSvgLineEdit = new QLineEdit();
 
                                                                         // Button - Output Browse Button
                                                                         browseOutputButton = new QPushButton("Browse");
@@ -1567,7 +1699,7 @@ public:
                                                                         qualityLabel = new QLabel("Quality");
 
                                                                         // Quality -> Button - Fast Radio Button
-                                                                        qualityFastRadioButton = new QRadioButton("fast");
+                                                                        qualityFastRadioButton = new QRadioButton("Fast");
                                                                         qualityFastRadioButton->setCursor(Qt::PointingHandCursor);
                                                                         qualityFastRadioButton->setToolTip("Fast");
                                                                         
@@ -1604,12 +1736,30 @@ public:
                                         auto CreateLayouts = [&]() {
                                                                         mainLayout->addWidget(titleLabel);
 
+                                                                        auto importLayout = (QHBoxLayout*)nullptr;
+                                                                        importLayout = new QHBoxLayout;
+                                                                        importLayout->addWidget(inputImportLabel);
+                                                                        mainLayout->addLayout(importLayout);
+                                                                        
+                                                                        imageNameLayout->addWidget(imageNameLabel);
+                                                                        imageNameLayout->addWidget(imageNameLineEdit);
+                                                                        mainLayout->addLayout(imageNameLayout);
+
                                                                         // Layout - A Horizontal Layout (Image Location + Input + Browse)
                                                                         imageInputLayout = new QHBoxLayout;
                                                                         imageInputLayout->addWidget(inputImageLabel);
                                                                         imageInputLayout->addWidget(imageInput);
                                                                         imageInputLayout->addWidget(broseButton);
                                                                         mainLayout->addLayout(imageInputLayout);
+
+                                                                        auto exportLayout = (QHBoxLayout*)nullptr;
+                                                                        exportLayout = new QHBoxLayout;
+                                                                        exportLayout->addWidget(outputExportLabel);
+                                                                        mainLayout->addLayout(exportLayout);
+
+                                                                        svgNameLayout->addWidget(svgFileNameLabel);
+                                                                        svgNameLayout->addWidget(svgFileNameLineEdit);
+                                                                        mainLayout->addLayout(svgNameLayout);
 
                                                                         // Layout - A Horizontal Layout (Output Save Location + Input + Browse)
                                                                         svgOutputLayout = new QHBoxLayout;
@@ -1686,8 +1836,33 @@ public:
                                                                                                                                                         if(!folder.isEmpty()) {
                                                                                                                                                                                     imageInput->setText(folder);
                                                                                                                                                                                 }
+
+                                                                                                                                                        if(!folder.isEmpty()) {
+                                                                                                                                                                                    imageInput->setText(folder);
+                                                                                                                                                                                    QFileInfo info(folder);
+                                                                                                                                                                                    imageNameLineEdit->setText(info.fileName());
+                                                                                                                                                                                    svgFileNameLineEdit->setText(info.completeBaseName() + ".svg");
+                                                                                                                                                                                }
                                                                                                                                                     }
                                                                                                 );
+
+                                                                            // Fconnect - Search image while typing.
+                                                                            QObject::connect(imageNameLineEdit,&QLineEdit::textChanged,dialog,[=](const QString &text) {
+                                                                                                                                                                            QString imagePath = SVGStudioIndexer::FindImage(text);
+                                                                                                                                                                            if(imagePath.isEmpty()) {
+                                                                                                                                                                                                        imageNameLineEdit->setStyleSheet(
+                                                                                                                                                                                                                                            "border:2px solid red;"
+                                                                                                                                                                                                                                        );
+                                                                                                                                                                                                        imageInput->clear();
+                                                                                                                                                                                                        svgFileNameLineEdit->clear();
+                                                                                                                                                                                                        return;
+                                                                                                                                                                                                    }
+
+                                                                                                                                                                            imageNameLineEdit->setStyleSheet("");
+                                                                                                                                                                            imageInput->setText(imagePath);
+                                                                                                                                                                            svgFileNameLineEdit->setText(QFileInfo(imagePath).completeBaseName()+ ".svg");
+                                                                                                                                                                        }
+                                                                                            );
 
                                                                             QObject::connect(convertButton,&QPushButton::clicked,dialog,[=]() {
                                                                                                                                                     QString inputPath = imageInput->text().trimmed();
@@ -3964,6 +4139,7 @@ int main(int argc, char *argv[]) {
                                                                     }
                                     SVGStudioGui studio;
                                     studio.show();
+                                    SVGStudioIndexer::Start();
                                     Automate::StartupChecks();
                                     QLocalServer *server;
                                     server = new QLocalServer;
